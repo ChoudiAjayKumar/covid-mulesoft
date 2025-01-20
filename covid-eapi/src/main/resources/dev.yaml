@@ -1,0 +1,16 @@
+api:
+  id: "20137944"  
+  
+http:
+  host: "0.0.0.0"
+  port: "8081"
+
+request:
+  covidPapi:
+    host: "covid-papi-2tjdvy.5sc6y6-3.usa-e2.cloudhub.io"
+    port: "443"
+    
+covidPapi:
+  clientId: "![rWkmU9nsjA0ruNaA0hzAvF+R7WufGXOcfr/JCUEoj/yYgho8dVDBEw==]"
+  clientSecret: "![40y53VUkKG4X6fddgLA7XrDBGeMw1+iL8lO6CL6LXHFmF+agTNpfiA==]"      
+  

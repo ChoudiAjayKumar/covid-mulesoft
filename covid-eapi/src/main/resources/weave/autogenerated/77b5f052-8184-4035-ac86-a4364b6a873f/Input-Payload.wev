@@ -1,0 +1,29 @@
+%dw 2.0
+
+type auto_77b5f052_8184_4035_ac86_a4364b6a873f_Input_Payload = {
+  lastName?: String, 
+  aadhaarId: String, 
+  firstDoseDate?: String, 
+  updateDate?: String, 
+  address: {
+    pincode: String, 
+    country: "INDIA", 
+    streetAddress: String, 
+    city: String, 
+    state: String, 
+    _?: Any
+  }, 
+  dateOfBirth: String, 
+  source: String, 
+  nationalIdType: "AADHAAR", 
+  caseType: "POSITIVE" | "RECOVERED" | "DEATH", 
+  firstName: String, 
+  dose: "0" | "1" | "2", 
+  phone: String, 
+  secondDoseDate?: String, 
+  caseId: String, 
+  email?: String, 
+  createDate: String, 
+  _?: Any
+}
+

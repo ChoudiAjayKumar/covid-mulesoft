@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
+	<flow name="upsert-flow" doc:id="575d907d-fbb4-47ec-b8b6-d41d6ceb5038" >
+		<logger level="INFO" doc:name="Start Log" doc:id="655f4f34-b32f-4d76-bf57-d516e9b7dcef" message="correlationId: #[vars.correlationId], message: started upsert flow" />
+		<http:request method="POST" doc:name="Covid Papi Upsert" doc:id="6a87a935-7ed5-4b16-9a0f-7e6ac2a8d96c" config-ref="HTTP_Covid_Papi_Request_configuration" path="/cases">
+			<http:headers><![CDATA[#[{
+	"client_id": Mule::p('secure::covidPapi.clientId'),
+    "client_secret": Mule::p('secure::covidPapi.clientSecret'),
+    "correlation-id": vars.correlationId
+}]]]></http:headers>
+		</http:request>
+		<set-variable value="#[attributes.statusCode]" doc:name="httpStatus" doc:id="8c25dda9-96bb-4ed6-b4d3-fe36b8223af7" variableName="httpStatus"/>
+		<logger level="INFO" doc:name="End Log" doc:id="3671b09f-4a8b-4c6b-bc27-9d2e47e76a6b" message="correlationId: #[vars.correlationId], message: completed upsert flow" />
+	</flow>
+	<flow name="get-reports-flow" doc:id="16d0b5fc-a3fb-458f-aa15-5d7549e4043e" >
+		<set-variable value="#[attributes.queryParams.state]" doc:name="stateQueryParam" doc:id="11b48b0b-94f8-44b3-966e-1bf675be6b10" variableName="stateQueryParam" />
+		<logger level="INFO" doc:name="Start Log" doc:id="2ae07b93-dc73-4ccd-838c-4e6acb2ce886" message="correlationId: #[vars.correlationId], message: started get reports flow" />
+		<http:request method="GET" doc:name="Covid Papi Get Reports" doc:id="b5ce1288-3660-4198-a2d3-7ae5131f81a7" config-ref="HTTP_Covid_Papi_Request_configuration" path="/cases">
+			<http:headers><![CDATA[#[{
+	"client_id": Mule::p('secure::covidPapi.clientId'),
+    "client_secret": Mule::p('secure::covidPapi.clientSecret'),
+    "correlation-id": vars.correlationId
+}]]]></http:headers>
+			<http:query-params ><![CDATA[#[{
+	("state": vars.stateQueryParam)if(vars.stateQueryParam != null)
+	
+}]]]></http:query-params>
+		</http:request>
+		<logger level="INFO" doc:name="End Log" doc:id="9c604e85-902c-4d5d-95b7-d586ff9f3384" message="correlationId: #[vars.correlationId], message: completed get reports flow" />
+	</flow>
+	<flow name="get-by-caseId-flow" doc:id="77b5f052-8184-4035-ac86-a4364b6a873f" >
+		<set-variable value="#[attributes.uriParams.caseId]" doc:name="caseId" doc:id="c9b4e6b4-bfc8-4676-941b-7eed07dcd314" variableName="caseId" />
+		<logger level="INFO" doc:name="Start Log" doc:id="c19b3a22-dd92-4926-be60-ea1e309abd5f" message="correlationId: #[vars.correlationId], message: started get by caseId flow" />
+		<http:request method="GET" doc:name="Covid Papi Get Covid Case By CaseId" doc:id="0e699055-d4e6-4663-98e3-9f115dff87dc" config-ref="HTTP_Covid_Papi_Request_configuration" path="/cases/{caseId}">
+			<http:headers><![CDATA[#[{
+	"client_id": Mule::p('secure::covidPapi.clientId'),
+    "client_secret": Mule::p('secure::covidPapi.clientSecret'),
+    "correlation-id": vars.correlationId
+}]]]></http:headers>
+			<http:uri-params ><![CDATA[#[{
+	"caseId": vars.caseId
+}]]]></http:uri-params>
+		</http:request>
+		<logger level="INFO" doc:name="End Log" doc:id="e26d3bab-48ec-4347-a1ab-68e93ff20de0" message="correlationId: #[vars.correlationId], message: completed get by caseId flow" />
+	</flow>
+</mule>

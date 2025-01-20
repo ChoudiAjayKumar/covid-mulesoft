@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule
+	xmlns:api-gateway="http://www.mulesoft.org/schema/mule/api-gateway"
+	xmlns:secure-properties="http://www.mulesoft.org/schema/mule/secure-properties"
+	xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd 
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/secure-properties http://www.mulesoft.org/schema/mule/secure-properties/current/mule-secure-properties.xsd
+http://www.mulesoft.org/schema/mule/api-gateway http://www.mulesoft.org/schema/mule/api-gateway/current/mule-api-gateway.xsd">
+	<http:listener-config
+		name="Covid_Eapi_httpListenerConfig">
+		<http:listener-connection host="${secure::http.host}"
+			port="${secure::http.port}"/>
+	</http:listener-config>
+	<apikit:config name="covid-eapi-config"
+		api="resource::4a5d78a0-c23f-4acb-83b3-ec66a7607a2e:covid-eapi:1.0.0:raml:zip:covid-eapi.raml"
+		outboundHeadersMapName="outboundHeaders"
+		httpStatusVarName="httpStatus" />
+	<http:request-config name="HTTP_Covid_Papi_Request_configuration" doc:name="HTTP Request configuration" doc:id="e7ba84ee-f5ae-46a4-8554-2b257902bf13" basePath="/api" >
+		<http:request-connection host="${secure::request.covidPapi.host}" port="${secure::request.covidPapi.port}" protocol="HTTPS"/>
+	</http:request-config>
+	<secure-properties:config name="Secure_Properties_Config" doc:name="Secure Properties Config" doc:id="f208e284-9333-422c-a672-fef05cfb1255" file="${mule.env}.yaml" key="${enc.key}" >
+		<secure-properties:encrypt algorithm="Blowfish" />
+	</secure-properties:config>
+	<api-gateway:autodiscovery apiId="${secure::api.id}" ignoreBasePath="true" doc:name="API Autodiscovery" doc:id="7cf0b7ab-b86e-4480-b049-41ea375fa519" flowRef="covid-eapi-main" />
+
+</mule>

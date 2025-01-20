@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd ">
+
+	<flow name="covid-eapi-main">
+		<http:listener
+			config-ref="Covid_Eapi_httpListenerConfig" path="/api/*">
+			<http:response
+				statusCode="#[vars.httpStatus default 200]">
+				<http:headers><![CDATA[#[vars.outboundHeaders default {}]]]></http:headers>
+			</http:response>
+			<http:error-response
+				statusCode="#[vars.httpStatus default 500]">
+				<http:body><![CDATA[#[payload]]]></http:body>
+				<http:headers><![CDATA[#[vars.outboundHeaders default {}]]]></http:headers>
+			</http:error-response>
+		</http:listener>
+		<set-variable value="#[attributes.headers.'correlation-id' default correlationId]" doc:name="Correlation ID" doc:id="4332da62-dc4b-4eef-bd71-80254d8efd4d" variableName="correlationId" />
+		<apikit:router config-ref="covid-eapi-config" />
+		<error-handler ref="Global_Error_Handler" />
+
+	</flow>
+	<flow name="get:\healthcheck:covid-eapi-config">
+		<ee:transform doc:name="Health Check Response" doc:id="86856320-4bd9-426e-a1e9-2cd8b9bbf4c3" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+  status: "The service is alive and running"
+} as Object {encoding: "UTF-8", mediaType: "application/json"}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="post:\cases:application\json:covid-eapi-config">
+		<flow-ref doc:name="upsert-flow" doc:id="d9c83da6-85d0-40de-919c-989841962d35" name="upsert-flow"/>
+	</flow>
+	<flow name="get:\cases:covid-eapi-config">
+		<flow-ref doc:name="get-reports-flow" doc:id="0f8f4c82-fce5-4d72-8404-676a56d49e99" name="get-reports-flow"/>
+	</flow>
+
+	<flow name="get:\cases\(caseId):covid-eapi-config">
+		<flow-ref doc:name="get-by-caseId-flow" doc:id="cdf23d91-df01-4c42-ba28-ec66ee8f3925" name="get-by-caseId-flow"/>
+	</flow>
+
+</mule>

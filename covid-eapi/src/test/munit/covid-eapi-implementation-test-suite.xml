@@ -1,0 +1,332 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:munit="http://www.mulesoft.org/schema/mule/munit"
+	xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xsi:schemaLocation="
+		http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+		http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+		http://www.mulesoft.org/schema/mule/munit-tools  http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
+	<munit:config name="covid-eapi-implementation-test-suite.xml" />
+	<http:request-config name="HTTP_Covid_Eapi_Request_configuration" doc:name="HTTP Request configuration" doc:id="7241c26f-25f0-4520-9659-bc7ff5740a29" basePath="/api" >
+		<http:request-connection host="${secure::http.host}" port="${secure::http.port}" />
+	</http:request-config>
+	<munit:test name="upsert-test" doc:id="f73ae66b-01f0-4b29-bf1d-610adddddf0f">
+		<munit:enable-flow-sources >
+			<munit:enable-flow-source value="covid-eapi-main" />
+			<munit:enable-flow-source value="post:\cases:application\json:covid-eapi-config" />
+		</munit:enable-flow-sources>
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="Covid Papi Upsert" doc:id="762bae73-4da2-4677-a53a-66b1b4759802" processor="http:request">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="6a87a935-7ed5-4b16-9a0f-7e6ac2a8d96c" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value="#[%dw 2.0&#10;output application/json&#10;---&#10;readUrl('classpath://test-data/request-mocks/covid-papi-upsert.json')]" mediaType="application/json" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution >
+			<http:request method="POST" doc:name="Upsert" doc:id="c319aa66-bbdb-4ad1-bebd-03ab0c526310" config-ref="HTTP_Covid_Eapi_Request_configuration" path="/cases" responseTimeout="120000">
+				<http:body ><![CDATA[#[%dw 2.0
+output application/json
+---
+readUrl('classpath://test-data/inputs/upsert.json')]]]></http:body>
+				<http:headers ><![CDATA[#[readUrl('classpath://test-data/inputs/headers.json')]]]></http:headers>
+			</http:request>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-equals doc:name="Assert equals" doc:id="27828a43-0e63-4b22-a883-49dd6bd6690c" actual="#[payload]" expected="#[readUrl('classpath://test-data/assertions/upsert.json')]" message="Invalid response"/>
+		</munit:validation>
+	</munit:test>
+	<munit:test name="get-reports-test" doc:id="23425879-536d-439d-bb3f-5ece47fc32a1">
+		<munit:enable-flow-sources >
+			<munit:enable-flow-source value="covid-eapi-main" />
+			<munit:enable-flow-source value="get:\cases:covid-eapi-config" />
+		</munit:enable-flow-sources>
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="Covid Papi Get Reports" doc:id="b5a41483-0c63-4b82-9c48-1522f6f1a837" processor="http:request">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="b5ce1288-3660-4198-a2d3-7ae5131f81a7" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value="#[%dw 2.0&#10;output application/json&#10;---&#10;readUrl('classpath://test-data/request-mocks/covid-papi-get-reports.json')]" mediaType="application/json" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution >
+			<http:request method="GET" doc:name="Get Reports" doc:id="dce58e32-e28f-4b56-88da-e4ceb906f9e9" config-ref="HTTP_Covid_Eapi_Request_configuration" path="/cases" responseTimeout="120000">
+				<http:headers ><![CDATA[#[readUrl('classpath://test-data/inputs/headers.json')]]]></http:headers>
+				<http:query-params ><![CDATA[#[readUrl('classpath://test-data/inputs/state.json')]]]></http:query-params>
+			</http:request>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-equals doc:name="Assert equals" doc:id="ce136159-8135-47d8-a547-7f6c6f2458be" actual="#[payload]" expected="#[readUrl('classpath://test-data/assertions/get-reports.json')]" message="Invalid response" />
+		</munit:validation>
+	</munit:test>
+	<munit:test name="get-by-caseId-test" doc:id="c81be6fa-13ad-4dcd-a304-967584e862db">
+		
+		<munit:enable-flow-sources>
+			<munit:enable-flow-source value="covid-eapi-main" />
+			<munit:enable-flow-source value="get:\cases\(caseId):covid-eapi-config" />
+
+		</munit:enable-flow-sources>
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="Covid Papi Get Covid Case By CaseId" doc:id="72bd97c3-fbbd-4189-b4af-3be24bb001fd" processor="http:request" >
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="0e699055-d4e6-4663-98e3-9f115dff87dc" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value="#[%dw 2.0&#10;output application/json&#10;---&#10;readUrl('classpath://test-data/request-mocks/covid-papi-get-by-caseId.json')]" mediaType="application/json" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution >
+			<http:request method="GET" doc:name="Get By caseId" doc:id="7203c408-d055-4ebe-aedc-5c9eb0209783" config-ref="HTTP_Covid_Eapi_Request_configuration" path="/cases/{caseId}" responseTimeout="120000" >
+				<http:headers ><![CDATA[#[readUrl('classpath://test-data/inputs/headers.json')]]]></http:headers>
+				<http:uri-params ><![CDATA[#[readUrl('classpath://test-data/inputs/caseId.json')]]]></http:uri-params>
+			</http:request>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-equals doc:name="Assert equals" doc:id="6b98cda2-effe-42f0-a74d-644cd5a523c3" actual="#[payload]" expected="#[readUrl('classpath://test-data/assertions/get-by-caseId.json')]" message="Invalid response" />
+		</munit:validation>
+	</munit:test>
+	<munit:test name="healthcheck-test" doc:id="9004bfe3-06f0-4019-85e5-1e26893c8c69">
+		<munit:enable-flow-sources >
+			<munit:enable-flow-source value="covid-eapi-main" />
+			<munit:enable-flow-source value="get:\healthcheck:covid-eapi-config" />
+		</munit:enable-flow-sources>
+		<munit:execution >
+			<http:request method="GET" doc:name="Health Check" doc:id="78b78457-7058-43ff-8d11-8022b572d071" config-ref="HTTP_Covid_Eapi_Request_configuration" path="/healthcheck" >
+				<http:headers ><![CDATA[#[readUrl('classpath://test-data/inputs/headers.json')]]]></http:headers>
+			</http:request>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-equals doc:name="Assert equals" doc:id="c7ca175e-4068-44c2-b210-0b99d05adfe1" actual="#[payload]" expected="#[readUrl('classpath://test-data/assertions/healthcheck.json')]" />
+		</munit:validation>
+	</munit:test>
+	<munit:test name="connectivity-error-test" doc:id="eb82074c-a8c8-4aef-ac40-9d2e8af5c0a8" expectedErrorType="HTTP:SERVICE_UNAVAILABLE">
+		<munit:enable-flow-sources >
+			<munit:enable-flow-source value="covid-eapi-main" />
+			<munit:enable-flow-source value="post:\cases:application\json:covid-eapi-config" />
+		</munit:enable-flow-sources>
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="Covid Papi Upsert" doc:id="dc7bb9c1-2135-4bcf-a089-610dd916733a" processor="http:request" >
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="6a87a935-7ed5-4b16-9a0f-7e6ac2a8d96c" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value="#[payload]" />
+					<munit-tools:error typeId="HTTP:CONNECTIVITY" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution >
+			<http:request method="POST" doc:name="Upsert" doc:id="b3940d03-e71b-4ad2-8260-9a60a317a330" config-ref="HTTP_Covid_Eapi_Request_configuration" path="/cases" responseTimeout="120000" >
+				<http:body ><![CDATA[#[%dw 2.0
+output application/json
+---
+readUrl('classpath://test-data/inputs/upsert.json')]]]></http:body>
+				<http:headers ><![CDATA[#[readUrl('classpath://test-data/inputs/headers.json')]]]></http:headers>
+			</http:request>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-equals doc:name="Assert equals" doc:id="31ae61d5-d36c-4c8c-9a91-a22c208e0881" actual="#[vars.httpStatus]" expected="#[503]" message="Invalid response" />
+		</munit:validation>
+	</munit:test>
+	<munit:test name="http-bad-request-error-test" doc:id="90789600-274e-4a8a-bcdf-8d43be89bdd7" expectedErrorType="HTTP:BAD_REQUEST">
+		
+		<munit:enable-flow-sources>
+			
+			
+			<munit:enable-flow-source value="covid-eapi-main" />
+			<munit:enable-flow-source value="post:\cases:application\json:covid-eapi-config" />
+		</munit:enable-flow-sources>
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="Covid Papi Upsert" doc:id="e98a930f-9f87-4a97-9b0e-ed5a3ad84ef1" processor="http:request" >
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="6a87a935-7ed5-4b16-9a0f-7e6ac2a8d96c" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value="#[payload]" />
+					<munit-tools:error typeId="HTTP:BAD_REQUEST" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution >
+			<http:request method="POST" doc:name="Upsert" doc:id="d684f96a-15fc-452a-a5dd-b4be21a9e29d" config-ref="HTTP_Covid_Eapi_Request_configuration" path="/cases" responseTimeout="120000" >
+				<http:body ><![CDATA[#[%dw 2.0
+output application/json
+---
+readUrl('classpath://test-data/inputs/upsert.json')]]]></http:body>
+				<http:headers ><![CDATA[#[readUrl('classpath://test-data/inputs/headers.json')]]]></http:headers>
+			</http:request>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-equals doc:name="Assert equals" doc:id="7500af51-9a3f-4c46-8ed4-ee4bcc8d0a24" actual="#[vars.httpStatus]" expected="#[400]" message="Invalid response" />
+		</munit:validation>
+	</munit:test>
+	<munit:test name="any-error-test" doc:id="af74cd2a-de9b-4ab7-b0c7-93f83e3a4459" expectedErrorType="HTTP:INTERNAL_SERVER_ERROR">
+		
+		<munit:enable-flow-sources>
+			
+			
+			<munit:enable-flow-source value="covid-eapi-main" />
+			<munit:enable-flow-source value="post:\cases:application\json:covid-eapi-config" />
+		</munit:enable-flow-sources>
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="Covid Papi Upsert" doc:id="706feeea-1750-471a-bb5f-9036e482e358" processor="http:request" >
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="6a87a935-7ed5-4b16-9a0f-7e6ac2a8d96c" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value="#[payload]" />
+					<munit-tools:error typeId="HTTP:INTERNAL_SERVER_ERROR" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution >
+			<http:request method="POST" doc:name="Upsert" doc:id="44408181-1ecc-43e2-8bba-3cad03929fff" config-ref="HTTP_Covid_Eapi_Request_configuration" path="/cases" responseTimeout="120000" >
+				<http:body ><![CDATA[#[%dw 2.0
+output application/json
+---
+readUrl('classpath://test-data/inputs/upsert.json')]]]></http:body>
+				<http:headers ><![CDATA[#[readUrl('classpath://test-data/inputs/headers.json')]]]></http:headers>
+			</http:request>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-equals doc:name="Assert equals" doc:id="f0e681de-066b-4125-b654-846e65f81d0d" actual="#[vars.httpStatus]" expected="#[500]" message="Invalid response" />
+		</munit:validation>
+	</munit:test>
+	<munit:test name="api-kit-bad-request-test" doc:id="da798d00-a0d6-48bc-93c7-8fc24a4e6bd6" expectedErrorType="HTTP:BAD_REQUEST">
+		<munit:enable-flow-sources >
+			<munit:enable-flow-source value="covid-eapi-main" />
+			<munit:enable-flow-source value="post:\cases:application\json:covid-eapi-config" />
+		</munit:enable-flow-sources>
+		<munit:execution>
+			<http:request method="POST" doc:name="Upsert" doc:id="0797c94f-442e-4dcc-a854-8757ab75082f" config-ref="HTTP_Covid_Eapi_Request_configuration" path="/cases" responseTimeout="120000">
+				<http:body><![CDATA[#[%dw 2.0
+output application/json
+---
+readUrl('classpath://test-data/inputs/apikit-bad-request.json')]]]></http:body>
+				<http:headers><![CDATA[#[readUrl('classpath://test-data/inputs/headers.json')]]]></http:headers>
+			</http:request>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-equals doc:name="Assert Equals" doc:id="26a549b3-3beb-47a7-a845-c97d913856eb" actual="#[vars.httpStatus]" expected="#[400]" message="Invalid status code" />
+		</munit:validation>
+	</munit:test>
+	<munit:test name="api-kit-not-found-test" doc:id="68136c7c-82b8-4d59-874f-4e698318690b" expectedErrorType="HTTP:NOT_FOUND">
+		<munit:enable-flow-sources>
+			<munit:enable-flow-source value="covid-eapi-main" />
+			<munit:enable-flow-source value="post:\cases:application\json:covid-eapi-config" />
+		</munit:enable-flow-sources>
+		<munit:execution >
+			<http:request method="POST" doc:name="Upsert" doc:id="1165149b-99e9-4047-86d5-f1e1f4fb512d" config-ref="HTTP_Covid_Eapi_Request_configuration" path="/cases123" responseTimeout="120000" >
+				<http:body ><![CDATA[#[%dw 2.0
+output application/json
+---
+readUrl('classpath://test-data/inputs/upsert.json')]]]></http:body>
+				<http:headers ><![CDATA[#[readUrl('classpath://test-data/inputs/headers.json')]]]></http:headers>
+			</http:request>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-equals doc:name="Assert Equals" doc:id="cd830dae-eea6-4367-982f-080d9afb0e7f" actual="#[vars.httpStatus]" expected="#[404]" message="Invalid status code" />
+		</munit:validation>
+	</munit:test>
+	<munit:test name="api-kit-method-not-allowed-test" doc:id="68268514-801b-451a-86f3-735f138d45bc" expectedErrorType="HTTP:METHOD_NOT_ALLOWED">
+		<munit:enable-flow-sources>
+			<munit:enable-flow-source value="covid-eapi-main" />
+			<munit:enable-flow-source value="post:\cases:application\json:covid-eapi-config" />
+		</munit:enable-flow-sources>
+		<munit:execution >
+			<http:request method="PATCH" doc:name="Patch" doc:id="30089552-530b-4728-be7f-f2c48428a77b" config-ref="HTTP_Covid_Eapi_Request_configuration" path="/cases" responseTimeout="120000" >
+				<http:body ><![CDATA[#[%dw 2.0
+output application/json
+---
+readUrl('classpath://test-data/inputs/upsert.json')]]]></http:body>
+				<http:headers ><![CDATA[#[readUrl('classpath://test-data/inputs/headers.json')]]]></http:headers>
+			</http:request>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-equals doc:name="Assert Equals" doc:id="4559ce12-4a35-4051-8ec4-fe1b0234c370" actual="#[vars.httpStatus]" expected="#[405]" message="Invalid status code" />
+		</munit:validation>
+	</munit:test>
+	<munit:test name="api-kit-not-acceptable-test" doc:id="abf5aa4d-eb19-4815-b1eb-6423dc2fd4d3" expectedErrorType="HTTP:NOT_ACCEPTABLE">
+		<munit:enable-flow-sources>
+			<munit:enable-flow-source value="covid-eapi-main" />
+			<munit:enable-flow-source value="post:\cases:application\json:covid-eapi-config" />
+		</munit:enable-flow-sources>
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="api-kit-router" doc:id="684552a5-bd21-4aaa-9f11-565deca87a63" processor="apikit:router" >
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="covid-eapi-config" attributeName="config-ref" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:error typeId="APIKIT:NOT_ACCEPTABLE" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution >
+			<http:request method="POST" doc:name="Upsert" doc:id="ce99419d-dd1e-4c65-8729-8e0af963de18" config-ref="HTTP_Covid_Eapi_Request_configuration" path="/cases" responseTimeout="120000" >
+				<http:body ><![CDATA[#[%dw 2.0
+output application/json
+---
+readUrl('classpath://test-data/inputs/upsert.json')]]]></http:body>
+				<http:headers ><![CDATA[#[readUrl('classpath://test-data/inputs/headers.json')]]]></http:headers>
+			</http:request>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-equals doc:name="Assert Equals" doc:id="22a17565-030d-4b4a-8a88-0c278b89fd29" actual="#[vars.httpStatus]" expected="#[406]" message="Invalid status code" />
+		</munit:validation>
+	</munit:test>
+	<munit:test name="api-kit-unsupported-media-type-test" doc:id="8474c6af-91a1-4edd-b219-7e80400b725a" expectedErrorType="HTTP:UNSUPPORTED_MEDIA_TYPE">
+		<munit:enable-flow-sources>
+			<munit:enable-flow-source value="covid-eapi-main" />
+			<munit:enable-flow-source value="post:\cases:application\json:covid-eapi-config" />
+		</munit:enable-flow-sources>
+		<munit:execution >
+			<http:request method="POST" doc:name="Upsert" doc:id="ff1080e7-0e3c-4ca0-b00e-db026a00fc71" config-ref="HTTP_Covid_Eapi_Request_configuration" path="/cases" responseTimeout="120000" >
+				<http:body ><![CDATA[#[%dw 2.0
+output application/java
+---
+readUrl('classpath://test-data/inputs/upsert.json')]]]></http:body>
+				<http:headers ><![CDATA[#[readUrl('classpath://test-data/inputs/headers.json')]]]></http:headers>
+			</http:request>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-equals doc:name="Assert Equals" doc:id="03f9e17a-b574-422a-bbd0-a92c26bf14cb" actual="#[vars.httpStatus]" expected="#[415]" message="Invalid status code" />
+		</munit:validation>
+	</munit:test>
+	<munit:test name="api-kit-not-implemented-test" doc:id="7d8bda05-7ff4-4180-a7bd-53a3af30112a" expectedErrorType="ANY">
+		<munit:enable-flow-sources>
+			<munit:enable-flow-source value="covid-eapi-main" />
+			<munit:enable-flow-source value="post:\cases:application\json:covid-eapi-config" />
+		</munit:enable-flow-sources>
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="api-kit-router" doc:id="abb1476a-85a8-450a-b38c-efe1016bca30" processor="apikit:router" >
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="covid-eapi-config" attributeName="config-ref" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:error typeId="APIKIT:NOT_IMPLEMENTED" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution >
+			<http:request method="POST" doc:name="Upsert" doc:id="b15718c8-934d-426d-ab78-ac80f05b17d7" config-ref="HTTP_Covid_Eapi_Request_configuration" path="/cases" responseTimeout="120000" >
+				<http:body ><![CDATA[#[%dw 2.0
+output application/json
+---
+readUrl('classpath://test-data/inputs/upsert.json')]]]></http:body>
+				<http:headers ><![CDATA[#[readUrl('classpath://test-data/inputs/headers.json')]]]></http:headers>
+			</http:request>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-equals doc:name="Assert Equals" doc:id="1a000b3a-747d-4a43-a0eb-51294bae436a" actual="#[vars.httpStatus]" expected="#[501]" message="Invalid status code" />
+		</munit:validation>
+	</munit:test>
+
+
+</mule>
