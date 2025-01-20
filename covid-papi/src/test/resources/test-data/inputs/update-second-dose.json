@@ -1,0 +1,22 @@
+{   
+    "caseId": "a04NS000004b0WbYAI",
+    "source": "UUCARE hospital",
+    "caseType": "POSITIVE",
+    "firstName": "Arjun",
+    "lastName": "Verma",
+    "phone": "9898989800",
+    "email": "arjun@gmail.com",
+    "dateOfBirth": "26/04/1989",
+    "aadhaarId": "397788000099", 
+    "nationalIdType": "AADHAAR",
+    "address":{
+          "streetAddress": "123, Banjara Hills Road",
+          "city": "Hyderabad",
+          "state": "Telangana",
+          "pincode": "500034",
+          "country": "INDIA"
+    },
+    "firstDoseDate": "13/09/2021",
+    "secondDoseDate": "16/10/2021",
+    "dose": "2"
+}

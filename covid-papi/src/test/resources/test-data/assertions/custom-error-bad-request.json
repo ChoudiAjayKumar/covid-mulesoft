@@ -1,0 +1,7 @@
+{
+  "code": "400",
+  "message": "Bad request",
+  "description": "It’s still too soon for your second dose. Please wait until the recommended time has passed before trying again",
+  "dateTime": "2024-12-31T01:52:13.96+05:30",
+  "correlationId": "fffa0100-b855-11ef-a66c-28d0437f1753"
+}

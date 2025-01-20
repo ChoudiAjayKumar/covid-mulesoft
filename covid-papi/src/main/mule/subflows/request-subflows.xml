@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
+	<flow name="create-request-subflow" doc:id="75c37269-8476-47ad-841c-d82baf9c75f0" >
+		<logger level="INFO" doc:name="Start Log" doc:id="f8ca1b4d-aa8d-442c-a000-63c83f0bc3a6" message="correlationId: #[vars.correlationId], message: started create request subflow" />
+		<http:request method="POST" doc:name="Ihub Sapi Create" doc:id="987a60b6-9f60-4a2e-994e-85c9fbf9564a" config-ref="HTTP_Ihub_Sapi_Request_configuration" path="/cases">
+			<http:headers ><![CDATA[#[{
+	"client_id": Mule::p('secure::ihubSapi.clientId'),
+    "client_secret": Mule::p('secure::ihubSapi.clientSecret'),
+    "correlation-id": vars.correlationId
+}]]]></http:headers>
+		</http:request>
+		<logger level="INFO" doc:name="End Log" doc:id="e0bd9085-bd0e-4ad5-8c0a-abbcfc062583" message="correlationId: #[vars.correlationId], message: completed create request subflow" />
+	</flow>
+	<flow name="update-request-subflow" doc:id="a8e5ca70-42e9-4978-9a1b-0f0ea68d43bf" >
+		<logger level="INFO" doc:name="Start Log" doc:id="f632e88f-b2c9-4a76-a855-c2113440425d" message="correlationId: #[vars.correlationId], message: started update request subflow" />
+		<http:request method="PUT" doc:name="Ihub Sapi Update" doc:id="386e0489-ab72-4cfb-8a72-fd548eb5f4e4" config-ref="HTTP_Ihub_Sapi_Request_configuration" path="/cases">
+			<http:headers ><![CDATA[#[{
+	"client_id": Mule::p('secure::ihubSapi.clientId'),
+    "client_secret": Mule::p('secure::ihubSapi.clientSecret'),
+    "correlation-id": vars.correlationId
+}]]]></http:headers>
+		</http:request>
+		<logger level="INFO" doc:name="End Log" doc:id="ace1f3ce-3cf7-456a-932f-5c0a5d0750a5" message="correlationId: #[vars.correlationId], message: completed  update request subflow" />
+	</flow>
+	<flow name="get-reports-request-subflow" doc:id="c469219c-5047-405c-ab3d-6cb49dbbaead" >
+		<logger level="INFO" doc:name="Start Log" doc:id="30b2bd0f-13a1-440b-9530-069526a5af74" message="correlationId: #[vars.correlationId], message: started get reports request subflow" />
+		<http:request method="GET" doc:name="Ihub Sapi Get Reports" doc:id="eecd034b-51ce-404b-be52-fe089e21a16c" config-ref="HTTP_Ihub_Sapi_Request_configuration" path="/cases">
+			<http:headers ><![CDATA[#[{
+	"client_id": Mule::p('secure::ihubSapi.clientId'),
+    "client_secret": Mule::p('secure::ihubSapi.clientSecret'),
+    "correlation-id": vars.correlationId
+}]]]></http:headers>
+			<http:query-params ><![CDATA[#[{
+	("state": vars.stateQueryParam)if(vars.stateQueryParam != null)
+	
+}]]]></http:query-params>
+		</http:request>
+		<logger level="INFO" doc:name="End Log" doc:id="454140a2-cd39-4887-a2c1-05e55e532811" message="correlationId: #[vars.correlationId], message: completed get reports request subflow" />
+	</flow>
+	<flow name="get-by-caseId-request-subflow" doc:id="44364348-20ff-489a-80f0-436e1c13eb9c" >
+		<logger level="INFO" doc:name="Start Log" doc:id="d3fdc12a-6035-4ee7-a7e1-79b52b9a8e4d" message="correlationId: #[vars.correlationId], message: started get by caseId request subflow" />
+		<http:request method="GET" doc:name="Ihub Sapi Get By caseId" doc:id="7c66eea1-d786-4258-ac20-53965300b8ea" config-ref="HTTP_Ihub_Sapi_Request_configuration" path="/cases/{caseId}" >
+			<http:headers ><![CDATA[#[{
+	"client_id": Mule::p('secure::ihubSapi.clientId'),
+    "client_secret": Mule::p('secure::ihubSapi.clientSecret'),
+    "correlation-id": vars.correlationId
+}]]]></http:headers>
+			<http:uri-params ><![CDATA[#[{
+	"caseId": vars.caseId
+}]]]></http:uri-params>
+		</http:request>
+		<logger level="INFO" doc:name="End Log" doc:id="ec7a71d2-41a4-4412-844c-2d64534a410a" message="correlationId: #[vars.correlationId], message: completed get by caseId request subflow" />
+	</flow>
+</mule>

@@ -1,0 +1,200 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
+	<error-handler name="Global_Error_Handler" doc:id="3dc9a693-93b7-455c-a6f9-59fae46c346d" >
+		<on-error-propagate type="APIKIT:BAD_REQUEST">
+		<ee:transform doc:name="Error Response">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+  "code": "400",
+  "message": "Bad request",
+  "description": error.description,
+  "dateTime": now(),
+  "correlationId": vars.correlationId
+}
+]]></ee:set-payload>
+			</ee:message>
+			<ee:variables>
+					<ee:set-variable variableName="httpStatus" ><![CDATA[400]]></ee:set-variable>
+			
+</ee:variables>
+		</ee:transform>
+	</on-error-propagate>
+		<on-error-propagate type="APIKIT:NOT_FOUND">
+		<ee:transform doc:name="Error Response">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+  "code": "404",
+  "message": "Resource not found",
+  "description": error.description,
+  "dateTime": now(),
+  "correlationId": vars.correlationId
+}
+]]></ee:set-payload>
+			</ee:message>
+			<ee:variables>
+				<ee:set-variable variableName="httpStatus"><![CDATA[404]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+	</on-error-propagate>
+		<on-error-propagate type="APIKIT:METHOD_NOT_ALLOWED">
+		<ee:transform doc:name="Error Response">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+  "code": "405",
+  "message": "Method not allowed",
+  "description": error.description,
+  "dateTime": now(),
+  "correlationId": vars.correlationId
+}
+]]></ee:set-payload>
+			</ee:message>
+			<ee:variables>
+				<ee:set-variable variableName="httpStatus"><![CDATA[405]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+	</on-error-propagate>
+		<on-error-propagate type="APIKIT:NOT_ACCEPTABLE">
+		<ee:transform doc:name="Error Response">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+  "code": "406",
+  "message": "Not acceptable",
+  "description": error.description,
+  "dateTime": now(),
+  "correlationId": vars.correlationId
+}
+
+]]></ee:set-payload>
+			</ee:message>
+			<ee:variables>
+				<ee:set-variable variableName="httpStatus"><![CDATA[406]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+	</on-error-propagate>
+		<on-error-propagate type="APIKIT:UNSUPPORTED_MEDIA_TYPE">
+		<ee:transform doc:name="Error Response">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+  "code": "415",
+  "message": "Unsupported media type",
+  "description": error.description,
+  "dateTime": now(),
+  "correlationId": vars.correlationId
+}
+
+]]></ee:set-payload>
+			</ee:message>
+			<ee:variables>
+				<ee:set-variable variableName="httpStatus"><![CDATA[415]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+	</on-error-propagate>
+		<on-error-propagate type="APIKIT:NOT_IMPLEMENTED">
+		<ee:transform doc:name="Error Response">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+  "code": "501",
+  "message": "Not Implemented",
+  "description": error.description,
+  "dateTime": now(),
+  "correlationId": vars.correlationId
+}
+]]></ee:set-payload>
+			</ee:message>
+			<ee:variables>
+				<ee:set-variable variableName="httpStatus"><![CDATA[501]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+	</on-error-propagate>
+		<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="fcc6fb85-16c9-49d8-aa3f-cdcece229574" type="HTTP:CONNECTIVITY,HTTP:TIMEOUT,HTTP:SERVICE_UNAVAILABLE" >
+			<ee:transform doc:name="Error Response" doc:id="be68210d-a217-4e29-b38d-5862f98b8824" >
+				<ee:message >
+					<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+error.exception.errorMessage.payload default {
+	
+  "code": "503",
+  "message": "Service unavailable",
+  "description": error.description,
+  "dateTime": now(),
+  "correlationId": vars.correlationId
+}
+]]></ee:set-payload>
+				</ee:message>
+				<ee:variables >
+					<ee:set-variable variableName="httpStatus" ><![CDATA[503]]></ee:set-variable>
+				</ee:variables>
+			</ee:transform>
+		</on-error-propagate>
+		<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="b44939bd-bcd5-401d-ba3c-964e8adf5391" type="CUSTOM:BAD_REQUEST,HTTP:BAD_REQUEST" >
+			<ee:transform doc:name="Error Response" doc:id="7f7b1440-3cf7-490b-9c47-94a13e21344c" >
+				<ee:message >
+					<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+error.exception.errorMessage.payload default {
+	
+  "code": "400",
+  "message": "Bad request",
+  "description": error.description,
+  "dateTime": now(),
+  "correlationId": vars.correlationId
+}
+
+]]></ee:set-payload>
+				</ee:message>
+				<ee:variables >
+					<ee:set-variable variableName="httpStatus" ><![CDATA[400]]></ee:set-variable>
+				</ee:variables>
+			</ee:transform>
+		</on-error-propagate>
+		<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="681070f9-bf11-415e-a456-8ec0a83e74bd" type="ANY" >
+			<ee:transform doc:name="Error Response" doc:id="abef49bf-4f94-45d2-a07e-2271eddacd8f" >
+				<ee:message >
+					<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+error.exception.errorMessage.payload default {
+	
+  "code": "500",
+  "message": "Internal Server Error",
+  "description": error.description,
+  "dateTime": now(),
+  "correlationId": vars.correlationId
+}
+]]></ee:set-payload>
+				</ee:message>
+				<ee:variables >
+					<ee:set-variable variableName="httpStatus" ><![CDATA[500]]></ee:set-variable>
+				</ee:variables>
+			</ee:transform>
+		</on-error-propagate>
+	</error-handler>
+</mule>

@@ -1,0 +1,22 @@
+{
+  "Id": "a04NS000004ZmM1YAK",
+  "Source__c": "CARE hospital",
+  "CaseType__c": "DEATH",
+  "FirstName__c": "Arjun",
+  "LastName__c": "Verma",
+  "Phone__c": "9898989800",
+  "Email__c": "arjun@gmail.com",
+  "DateOfBirth__c": "1989-04-26",
+  "AadhaarId__c": "397788000015",
+  "NationalIdType__c": "AADHAAR",
+  "StreetAddress__c": "Street No. 12, Peddagollapalli Village",
+  "City__c": "Kandukur",
+  "State__c": "Andhra Pradesh",
+  "Pincode__c": "523105",
+  "Country__c": "INDIA",
+  "FirstDoseDate__c": "2021-09-13",
+  "SecondDoseDate__c": "2021-10-16",
+  "Dose__c": "2",
+  "CreateDate__c": "2024-12-22",
+  "UpdateDate__c": "2024-12-22"
+}

@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="upsert-flow" doc:id="55b74044-c371-4785-841d-c66ff6b704ec" >
+		<choice doc:name="Create / Update ?" doc:id="612e4638-cc6e-4827-95cf-827ba84edfda" >
+			<when expression="#[payload.caseId == null]">
+				<logger level="INFO" doc:name="Start Log" doc:id="7270d002-541f-4b08-9022-8d921ac9024b" message="correlationId: #[vars.correlationId], message: started upsert create flow" />
+				<ee:transform doc:name="Create Payload" doc:id="1aca952d-02a6-4199-9d16-be4506b83c42" >
+					<ee:message >
+						<ee:set-payload resource="dataweave/create-request.dwl" />
+					</ee:message>
+				</ee:transform>
+				<flow-ref doc:name="create-request-subflow" doc:id="6174759f-1855-4f0a-be0f-075b4572539e" name="create-request-subflow"/>
+				<ee:transform doc:name="Success Response" doc:id="774583ca-173a-4558-a4b2-356c6aa672dc" >
+					<ee:message >
+						<ee:set-payload resource="dataweave/upsert-response.dwl" />
+					</ee:message>
+					<ee:variables >
+						<ee:set-variable variableName="httpStatus" ><![CDATA[attributes.statusCode]]></ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+				<logger level="INFO" doc:name="End Log" doc:id="7e918f97-d1fa-4dd4-9b33-a8dde6875ec1" message="correlationId: #[vars.correlationId], message: completed upsert create flow" />
+			</when>
+			<when expression='#[(payload.caseId != null) and ((payload.dose == null) or (payload.dose == "1"))]'>
+				<logger level="INFO" doc:name="Start Log" doc:id="9df8a0fe-f610-4992-90dc-a772397fd299" message="correlationId: #[vars.correlationId], message: started upsert update dose one flow" />
+				<ee:transform doc:name="Update Payload" doc:id="10a71338-a872-4bba-aa24-ce79d695dbcb">
+					<ee:message>
+						<ee:set-payload resource="dataweave/update-request.dwl" />
+					</ee:message>
+				</ee:transform>
+				<flow-ref doc:name="update-request-subflow" doc:id="6b4771ff-52c1-4e42-8c1c-612104681cb1" name="update-request-subflow" />
+				<flow-ref doc:name="update-success-response-subflow" doc:id="d2e4d4f1-713e-4049-a1fb-a90c176d0cff" name="update-success-response-subflow" />
+				<logger level="INFO" doc:name="End Log" doc:id="8c94070b-9ff5-4e04-9ca8-df2dd1f97297" message="correlationId: #[vars.correlationId], message: completed upsert update dose one flow" />
+			</when>
+			<when expression='#[(payload.caseId != null) and  (payload.dose == "2")]'>
+				<logger level="INFO" doc:name="Start Log" doc:id="87a1bda8-c1b6-46ec-895d-aff9150cf2d0" message="correlationId: #[vars.correlationId], message: started upsert update dose two flow" />
+				<set-variable value="#[payload.caseId]" doc:name="caseId" doc:id="93b59608-7b45-47d0-93c1-8b1594cfb16e" variableName="caseId"/>
+				<flow-ref doc:name="get-by-caseId-request-subflow" doc:id="b562623e-31a8-4459-99ae-36e5cc09bc26" name="get-by-caseId-request-subflow" target="getById"/>
+				<set-variable value="#[%dw 2.0&#10;&#10;import * from module::formatters&#10;&#10;var personFirstDoseDate = vars.getById.FirstDoseDate__c as Date&#10;---&#10;daysBetween(personFirstDoseDate, dateFormat(payload.secondDoseDate)) &gt;= 30]" doc:name="secondDoseValidDateFlag" doc:id="d7351770-e920-4906-acc9-8e57caa5582a" variableName="secondDoseValidDateFlag" />
+				<choice doc:name="Second Dose Validity Check" doc:id="b38fb839-3c45-4a5a-b754-b90b88898a18" >
+					<when expression="#[vars.secondDoseValidDateFlag == true]">
+						<ee:transform doc:name="Update Payload" doc:id="c8e6db1e-fe9f-4691-8db8-d56d3aaaf11a">
+							<ee:message>
+								<ee:set-payload resource="dataweave/update-request.dwl" />
+							</ee:message>
+						</ee:transform>
+						<flow-ref doc:name="update-request-subflow" doc:id="6de1f076-38d4-4bdc-9fc1-08edcc31b491" name="update-request-subflow"/>
+						<flow-ref doc:name="update-success-response-subflow" doc:id="b36b9ce2-8dc8-4437-930b-d095a5ff1c6d" name="update-success-response-subflow" />
+						<logger level="INFO" doc:name="End Log" doc:id="f4bb9959-a68d-45e5-90b1-2bae3e41067a" message="correlationId: #[vars.correlationId], message: completed upsert update dose two flow" />
+					</when>
+					<otherwise>
+						<raise-error doc:name="Raise error" doc:id="69028158-445f-4085-aeea-624d2bcea25a" type="CUSTOM:BAD_REQUEST" description="It’s still too soon for your second dose. Please wait until the recommended time has passed before trying again"/>
+					</otherwise>
+				</choice>
+			</when>
+			<otherwise>
+				<logger level="INFO" doc:name="Logger" doc:id="0a2efa52-415f-43f6-813b-95cb9fcad251" message="unhandled case" />
+			</otherwise>
+		</choice>
+	</flow>
+	<flow name="get-reports-flow" doc:id="c61c62d3-c3aa-40bf-995d-922c813acb99" >
+		<set-variable value="#[attributes.queryParams.state]" doc:name="stateQueryParam" doc:id="16661826-fc8d-4400-87b9-f1854f8a24a3" variableName="stateQueryParam"/>
+		<logger level="INFO" doc:name="Start Log" doc:id="ec3110a9-5c07-449d-9694-89204fb6f3f1" message="correlationId: #[vars.correlationId], message: started get covid reports flow" />
+		<flow-ref doc:name="get-reports-request-subflow" doc:id="6e82a803-2dc7-4e6e-9e9d-6cbf6571f9fb" name="get-reports-request-subflow"/>
+		<ee:transform doc:name="Success Response" doc:id="6f041d67-6e49-4217-a4f8-085c880d5c27" >
+			<ee:message >
+				<ee:set-payload resource="dataweave/get-reports.dwl" />
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="End Log" doc:id="3cbabb6e-3fc2-41fc-bd69-d6470d0ac943" message="correlationId: #[vars.correlationId], message: completed get covid reports  flow" />
+	</flow>
+	<flow name="get-covid-case-by-caseId-flow" doc:id="2ae4086f-68c3-4881-8867-d071a39ab8a0">
+		<set-variable value="#[attributes.uriParams.caseId]" doc:name="caseId" doc:id="c660690c-7f22-48cb-9f08-323ef7404c51" variableName="caseId" />
+		<logger level="INFO" doc:name="Start Log" doc:id="3685e825-4401-440e-9b11-f642a229147e" message="correlationId: #[vars.correlationId], message: started get covid case by caseId flow" />
+		<flow-ref doc:name="get-by-caseId-request-subflow" doc:id="814c043c-3017-446d-abf7-41623d86ae0a" name="get-by-caseId-request-subflow" />
+		<ee:transform doc:name="Success Response" doc:id="d40763ae-7431-4dc1-a728-b26722376b24">
+			<ee:message>
+				<ee:set-payload resource="dataweave/get-by-caseId.dwl" />
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="End Log" doc:id="3c64aeeb-066c-4484-a239-3cf2ea8a09f9" message="correlationId: #[vars.correlationId], message: completed get covid case by caseId flow" />
+	</flow>
+	<sub-flow name="update-success-response-subflow" doc:id="c44bbb31-293d-4bee-baa7-d484a34aa9db">
+		<ee:transform doc:name="Success Response" doc:id="dbb34ba2-aec9-4b00-9c1d-96097bf3a1a4">
+					<ee:message>
+				<ee:set-payload resource="dataweave/upsert-response.dwl" />
+					</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="httpStatus" ><![CDATA[200]]></ee:set-variable>
+			</ee:variables>
+				</ee:transform>
+	</sub-flow>
+</mule>

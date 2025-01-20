@@ -1,0 +1,619 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:munit="http://www.mulesoft.org/schema/mule/munit"
+	xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xsi:schemaLocation="
+		http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+		http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+		http://www.mulesoft.org/schema/mule/munit-tools  http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
+	<http:request-config
+		name="HTTP_Covid_Papi_Request_configuration"
+		doc:name="HTTP Request configuration"
+		doc:id="eb48afdd-3a62-48e1-8086-95fba063e9a2" basePath="/api">
+		<http:request-connection
+			host="${secure::http.host}" port="${secure::http.port}" />
+	</http:request-config>
+	<munit:config
+		name="covid-papi-implementations-test-suite.xml" />
+	<munit:test doc:id="1eb54807-6d41-4ac1-b8b9-3d3fa2e76580"
+		description="Test" name="create-test">
+		<munit:enable-flow-sources>
+			<munit:enable-flow-source
+				value="covid-papi-main" />
+			<munit:enable-flow-source
+				value="get:\cases:covid-papi-config" />
+		</munit:enable-flow-sources>
+		<munit:behavior>
+			<munit-tools:mock-when
+				doc:name="Ihub Sapi Create"
+				doc:id="b7180d19-3269-4254-9d3c-32552cc52200"
+				processor="http:request">
+				<munit-tools:with-attributes>
+					<munit-tools:with-attribute
+						whereValue="987a60b6-9f60-4a2e-994e-85c9fbf9564a"
+						attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value="#[%dw 2.0&#10;output application/json&#10;---&#10;readUrl('classpath://test-data/request-mocks/ihub-sapi-upsert.json')]" mediaType="application/json" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution>
+			<http:request method="POST" doc:name="Create"
+				doc:id="84c87e17-5abd-420c-bcfc-e9899de65863"
+				config-ref="HTTP_Covid_Papi_Request_configuration" path="/cases">
+				<http:body><![CDATA[#[%dw 2.0
+output application/json
+---
+readUrl('classpath://test-data/inputs/create.json')]]]></http:body>
+				<http:headers><![CDATA[#[readUrl('classpath://test-data/inputs/headers.json')]]]></http:headers>
+			</http:request>
+		</munit:execution>
+		<munit:validation>
+			<munit-tools:assert-equals
+				doc:name="Assert Equals"
+				doc:id="5290c55b-a218-401f-9056-d671cab354f5"
+				expected="#[readUrl('classpath://test-data/assertions/upsert.json')]"
+				actual="#[payload]" message="Invalid response" />
+		</munit:validation>
+	</munit:test>
+	<munit:test name="update-first-dose-test"
+		doc:id="7bad6a82-ebfa-4d26-b368-524ebf1223c4" description="Test">
+
+		<munit:enable-flow-sources>
+
+
+			<munit:enable-flow-source
+				value="covid-papi-main" />
+			<munit:enable-flow-source
+				value="post:\cases:application\json:covid-papi-config" />
+		</munit:enable-flow-sources>
+		<munit:behavior>
+			<munit-tools:mock-when
+				doc:name="Ihub Sapi Update"
+				doc:id="ab58dc2f-c293-4788-b1ad-13c8d192fede"
+				processor="http:request">
+				<munit-tools:with-attributes>
+					<munit-tools:with-attribute
+						whereValue="386e0489-ab72-4cfb-8a72-fd548eb5f4e4"
+						attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value="#[%dw 2.0&#10;output application/json&#10;---&#10;readUrl('classpath://test-data/request-mocks/ihub-sapi-upsert.json')]" mediaType="application/json" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution>
+			<http:request method="POST" doc:name="Update"
+				doc:id="32a89bb5-a810-4124-9b5b-7ab81286e75a"
+				config-ref="HTTP_Covid_Papi_Request_configuration" path="/cases">
+				<http:body><![CDATA[#[%dw 2.0
+output application/json
+---
+readUrl('classpath://test-data/inputs/update-first-dose.json')]]]></http:body>
+				<http:headers><![CDATA[#[readUrl('classpath://test-data/inputs/headers.json')]]]></http:headers>
+			</http:request>
+		</munit:execution>
+		<munit:validation>
+			<munit-tools:assert-equals
+				doc:name="Assert Equals"
+				doc:id="2a2ddf43-9221-4478-8e9a-18eff8761534" actual="#[payload]"
+				expected="#[readUrl('classpath://test-data/assertions/upsert.json')]"
+				message="Invalid response" />
+		</munit:validation>
+	</munit:test>
+	<munit:test name="update-second-dose-test"
+		doc:id="0ff5ebdd-cfef-4041-9cb3-56c4cb2b20a1" description="Test">
+		<munit:enable-flow-sources>
+			<munit:enable-flow-source
+				value="covid-papi-main" />
+			<munit:enable-flow-source
+				value="post:\cases:application\json:covid-papi-config" />
+		</munit:enable-flow-sources>
+		<munit:behavior>
+			<munit-tools:mock-when
+				doc:name="Ihub Sapi Get By caseId"
+				doc:id="d1bb39e2-935c-4f50-a9a8-4ddad516b5fa"
+				processor="http:request">
+				<munit-tools:with-attributes>
+					<munit-tools:with-attribute
+						whereValue="7c66eea1-d786-4258-ac20-53965300b8ea"
+						attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value="#[%dw 2.0&#10;output application/json&#10;---&#10;readUrl('classpath://test-data/request-mocks/ihub-sapi-get-by-caseId.json')]" mediaType="application/json" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when
+				doc:name="Ihub Sapi Update"
+				doc:id="3dcae072-ef61-41e9-9961-1a65ae3fa390"
+				processor="http:request">
+				<munit-tools:with-attributes>
+					<munit-tools:with-attribute
+						whereValue="386e0489-ab72-4cfb-8a72-fd548eb5f4e4"
+						attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value="#[%dw 2.0&#10;output application/json&#10;---&#10;readUrl('classpath://test-data/request-mocks/ihub-sapi-upsert.json')]" mediaType="application/json" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution>
+			<http:request method="POST" doc:name="Update"
+				doc:id="7d5a0f38-f281-4a70-a127-a1e7486e1595"
+				config-ref="HTTP_Covid_Papi_Request_configuration" path="/cases">
+				<http:body><![CDATA[#[%dw 2.0
+output application/json
+---
+readUrl('classpath://test-data/inputs/update-second-dose.json')]]]></http:body>
+				<http:headers><![CDATA[#[readUrl('classpath://test-data/inputs/headers.json')]]]></http:headers>
+			</http:request>
+		</munit:execution>
+		<munit:validation>
+			<munit-tools:assert-equals
+				doc:name="Assert Equals"
+				doc:id="194cc70a-d7a4-41f3-a7ac-85bd231dba78" actual="#[payload]"
+				expected="#[readUrl('classpath://test-data/assertions/upsert.json')]"
+				message="Invalid response" />
+		</munit:validation>
+	</munit:test>
+	<munit:test name="update-second-dose-custom-error-test"
+		doc:id="a1c77e6d-9547-4126-8b9d-7186db24ef9e" description="Test"
+		expectedErrorType="HTTP:BAD_REQUEST">
+
+		<munit:enable-flow-sources>
+
+
+			<munit:enable-flow-source
+				value="covid-papi-main" />
+			<munit:enable-flow-source
+				value="post:\cases:application\json:covid-papi-config" />
+		</munit:enable-flow-sources>
+
+		<munit:behavior>
+			<munit-tools:mock-when
+				doc:name="Ihub Sapi Get By caseId"
+				doc:id="123adec4-c4cd-4cc8-bdae-456397c1f138"
+				processor="http:request">
+				<munit-tools:with-attributes>
+					<munit-tools:with-attribute
+						whereValue="7c66eea1-d786-4258-ac20-53965300b8ea"
+						attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value="#[%dw 2.0&#10;output application/json&#10;---&#10;readUrl('classpath://test-data/request-mocks/ihub-sapi-get-by-caseId.json')]" mediaType="application/json" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution>
+			<http:request method="POST" doc:name="Update"
+				doc:id="79f9caf9-8f16-4bdf-b3ce-e3d9f15fd2dd"
+				config-ref="HTTP_Covid_Papi_Request_configuration" path="/cases">
+				<http:body><![CDATA[#[%dw 2.0
+output application/json
+---
+readUrl('classpath://test-data/inputs/update-second-dose-custom-error.json')]]]></http:body>
+				<http:headers><![CDATA[#[readUrl('classpath://test-data/inputs/headers.json')]]]></http:headers>
+			</http:request>
+		</munit:execution>
+		<munit:validation>
+			<munit-tools:assert-equals
+				doc:name="Assert Equals"
+				doc:id="26acd2f7-28ff-468a-92c6-4948a39eee4c" actual="#[payload]"
+				expected="#[readUrl('classpath://test-data/assertions/custom-error-bad-request.json')]"
+				message="Invalid response" />
+		</munit:validation>
+	</munit:test>
+	<munit:test name="get-reports-test"
+		doc:id="bf796d07-5cef-4c64-8241-d1483ec21be1">
+		<munit:enable-flow-sources>
+			<munit:enable-flow-source
+				value="covid-papi-main" />
+			<munit:enable-flow-source
+				value="get:\cases:covid-papi-config" />
+		</munit:enable-flow-sources>
+		<munit:behavior>
+			<munit-tools:mock-when
+				doc:name="Ihub Sapi Get Reports"
+				doc:id="8d3d04ac-6baa-4d68-b832-5fc5b5dd2112"
+				processor="http:request">
+				<munit-tools:with-attributes>
+					<munit-tools:with-attribute
+						whereValue="eecd034b-51ce-404b-be52-fe089e21a16c"
+						attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value="#[%dw 2.0&#10;output application/java&#10;---&#10;readUrl('classpath://test-data/request-mocks/ihub-sapi-get-reports.json')]" mediaType="application/java" />
+				</munit-tools:then-return>
+			
+</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution>
+			<http:request method="GET" doc:name="Get Reports"
+				doc:id="d677b653-8418-4505-9cd2-a8e8373430db"
+				config-ref="HTTP_Covid_Papi_Request_configuration" path="/cases">
+				<http:headers><![CDATA[#[readUrl('classpath://test-data/inputs/headers.json')]]]></http:headers>
+				<http:query-params><![CDATA[#[readUrl('classpath://test-data/inputs/state.json')]]]></http:query-params>
+			</http:request>
+		</munit:execution>
+		<munit:validation>
+			<munit-tools:assert-equals
+				doc:name="Assert equals"
+				doc:id="ba054416-d73e-4041-a811-8ec84be02087" actual="#[payload]"
+				expected="#[readUrl('classpath://test-data/assertions/get-reports.json')]"
+				message="Invalid response" />
+		</munit:validation>
+	</munit:test>
+	<munit:test name="get-by-id-test"
+		doc:id="e2ee6cfe-9ce9-4d12-a4f6-4ff20b124c5b">
+		<munit:enable-flow-sources>
+			<munit:enable-flow-source
+				value="covid-papi-main" />
+			<munit:enable-flow-source
+				value="get:\cases\(caseId):covid-papi-config" />
+		</munit:enable-flow-sources>
+		<munit:behavior>
+			<munit-tools:mock-when
+				doc:name="Ihub Sapi Get By caseId"
+				doc:id="8dfd4b83-bb8f-425f-9de1-bd030e63fbd6"
+				processor="http:request">
+				<munit-tools:with-attributes>
+					<munit-tools:with-attribute
+						whereValue="7c66eea1-d786-4258-ac20-53965300b8ea"
+						attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value="#[%dw 2.0&#10;output application/java&#10;---&#10;readUrl('classpath://test-data/request-mocks/ihub-sapi-get-by-caseId.json')]" mediaType="application/java" />
+				</munit-tools:then-return>
+			
+</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution>
+			<http:request method="GET" doc:name="Get By Id"
+				doc:id="e87efc8b-606d-45b4-8755-ff464b64eeb2"
+				config-ref="HTTP_Covid_Papi_Request_configuration"
+				path="/cases/{caseId}" responseTimeout="120000">
+				<http:headers><![CDATA[#[readUrl('classpath://test-data/inputs/headers.json')]]]></http:headers>
+				<http:uri-params><![CDATA[#[readUrl('classpath://test-data/inputs/caseId.json')]]]></http:uri-params>
+			</http:request>
+		</munit:execution>
+		<munit:validation>
+			<munit-tools:assert-equals
+				doc:name="Assert equals"
+				doc:id="d0e20e56-ba22-425d-8c6d-71e65fe22811" actual="#[payload]"
+				expected="#[readUrl('classpath://test-data/assertions/get-by-caseId.json')]"
+				message="Invalid response" />
+		</munit:validation>
+	</munit:test>
+
+	<munit:test name="healthcheck-test"
+		doc:id="62b51cb1-a2bd-4c50-b5fa-604d29be93bc">
+		<munit:enable-flow-sources>
+			<munit:enable-flow-source
+				value="covid-papi-main" />
+			<munit:enable-flow-source
+				value="get:\healthcheck:covid-papi-config" />
+		</munit:enable-flow-sources>
+		<munit:execution>
+			<http:request method="GET" doc:name="Health Check"
+				doc:id="eacce1cf-745f-4e14-b60e-caaf9ff99d55"
+				config-ref="HTTP_Covid_Papi_Request_configuration"
+				path="/healthcheck">
+				<http:headers><![CDATA[#[readUrl('classpath://test-data/inputs/headers.json')]]]></http:headers>
+			</http:request>
+		</munit:execution>
+		<munit:validation>
+			<munit-tools:assert-equals
+				doc:name="Assert equals"
+				doc:id="4a505d1e-88a4-4bad-b707-fa8ffcd2c891" actual="#[payload]"
+				expected="#[readUrl('classpath://test-data/assertions/healthcheck.json')]" />
+		</munit:validation>
+	</munit:test>
+	<munit:test name="connectivity-error-test"
+		doc:id="fe97f5c9-953a-4bfe-aafd-f93e75847ec6" description="Test"
+		expectedErrorType="HTTP:SERVICE_UNAVAILABLE">
+
+		<munit:enable-flow-sources>
+
+
+			<munit:enable-flow-source
+				value="covid-papi-main" />
+			<munit:enable-flow-source
+				value="post:\cases:application\json:covid-papi-config" />
+		</munit:enable-flow-sources>
+		<munit:behavior>
+			<munit-tools:mock-when
+				doc:name="Ihub Sapi Create"
+				doc:id="e869fc3b-6430-49de-86fa-4889943d7ac7"
+				processor="http:request">
+				<munit-tools:with-attributes>
+					<munit-tools:with-attribute
+						whereValue="987a60b6-9f60-4a2e-994e-85c9fbf9564a"
+						attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return>
+					<munit-tools:error typeId="HTTP:CONNECTIVITY" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution>
+			<http:request method="POST" doc:name="Create"
+				doc:id="63598e1a-c8fb-4c41-8641-798f778a345d"
+				config-ref="HTTP_Covid_Papi_Request_configuration" path="/cases"
+				responseTimeout="120000">
+				<http:body><![CDATA[#[%dw 2.0
+output application/json
+---
+readUrl('classpath://test-data/inputs/create.json')]]]></http:body>
+				<http:headers><![CDATA[#[readUrl('classpath://test-data/inputs/headers.json')]]]></http:headers>
+			</http:request>
+		</munit:execution>
+		<munit:validation>
+			<munit-tools:assert-equals
+				doc:name="Assert Equals"
+				doc:id="7d48d528-680f-48e1-82dc-a394fb1d6fbb"
+				message="Invalid Status" actual="#[vars.httpStatus]" expected="503" />
+		</munit:validation>
+	</munit:test>
+	<munit:test name="any-error-test"
+		doc:id="3265f9cb-1996-48dd-86e4-68aa38b1ac82" description="Test"
+		expectedErrorType="HTTP:INTERNAL_SERVER_ERROR">
+		<munit:enable-flow-sources>
+			<munit:enable-flow-source
+				value="covid-papi-main" />
+			<munit:enable-flow-source
+				value="post:\cases:application\json:covid-papi-config" />
+		</munit:enable-flow-sources>
+		<munit:behavior>
+			<munit-tools:mock-when
+				doc:name="Ihub Sapi Create"
+				doc:id="73ecee14-9755-4aa5-81bc-5361049ae82c"
+				processor="http:request">
+				<munit-tools:with-attributes>
+					<munit-tools:with-attribute
+						whereValue="987a60b6-9f60-4a2e-994e-85c9fbf9564a"
+						attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return>
+					<munit-tools:error typeId="ANY" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution>
+			<http:request method="POST" doc:name="Create"
+				doc:id="a5466690-36d3-4fc4-bc96-d0c8791f52fa"
+				config-ref="HTTP_Covid_Papi_Request_configuration" path="/cases"
+				responseTimeout="120000">
+				<http:body><![CDATA[#[%dw 2.0
+output application/json
+---
+readUrl('classpath://test-data/inputs/create.json')]]]></http:body>
+				<http:headers><![CDATA[#[readUrl('classpath://test-data/inputs/headers.json')]]]></http:headers>
+			</http:request>
+		</munit:execution>
+		<munit:validation>
+			<munit-tools:assert-equals
+				doc:name="Assert Equals"
+				doc:id="5e0c7562-dcae-4429-b4d8-09ba55a824f2"
+				actual="#[vars.httpStatus]" expected="500" message="Invalid Status" />
+		</munit:validation>
+	</munit:test>
+	<munit:test name="api-kit-bad-request-test"
+		doc:id="09e0063f-474b-41f2-af7a-513d10ca2e43"
+		expectedErrorType="HTTP:BAD_REQUEST">
+		<munit:enable-flow-sources>
+			<munit:enable-flow-source
+				value="covid-papi-main" />
+			<munit:enable-flow-source
+				value="post:\cases:application\json:covid-papi-config" />
+		</munit:enable-flow-sources>
+		<munit:execution>
+			<http:request method="POST" doc:name="Create"
+				doc:id="302c469e-2999-450a-a08c-fbbc5d706d93"
+				config-ref="HTTP_Covid_Papi_Request_configuration" path="/cases"
+				responseTimeout="120000">
+				<http:body><![CDATA[#[%dw 2.0
+output application/json
+---
+readUrl('classpath://test-data/inputs/create.json')]]]></http:body>
+				<http:headers><![CDATA[#[readUrl('classpath://test-data/inputs/apikit-bad-request.json')]]]></http:headers>
+			</http:request>
+		</munit:execution>
+		<munit:validation>
+			<munit-tools:assert-equals
+				doc:name="Assert Equals"
+				doc:id="e962f71d-9005-4ded-8907-f740a8e18e3c"
+				actual="#[vars.httpStatus]" expected="#[400]"
+				message="Invalid status code" />
+		</munit:validation>
+	</munit:test>
+	<munit:test name="api-kit-not-found-test"
+		doc:id="06ef398f-d279-4bfc-b36a-1b0b6498980b"
+		expectedErrorType="HTTP:NOT_FOUND">
+
+		<munit:enable-flow-sources>
+
+			<munit:enable-flow-source
+				value="covid-papi-main" />
+			<munit:enable-flow-source
+				value="post:\cases:application\json:covid-papi-config" />
+		</munit:enable-flow-sources>
+		<munit:execution>
+			<http:request method="POST" doc:name="Create"
+				doc:id="3366a579-dbdf-4e25-805a-cb4660459287"
+				config-ref="HTTP_Covid_Papi_Request_configuration" path="/cases123"
+				responseTimeout="120000">
+				<http:body><![CDATA[#[%dw 2.0
+output application/json
+---
+readUrl('classpath://test-data/inputs/create.json')]]]></http:body>
+				<http:headers><![CDATA[#[readUrl('classpath://test-data/inputs/headers.json')]]]></http:headers>
+			</http:request>
+		</munit:execution>
+		<munit:validation>
+			<munit-tools:assert-equals
+				doc:name="Assert Equals"
+				doc:id="2b3c8ca9-38bc-456c-8f90-c90173836f7e"
+				actual="#[vars.httpStatus]" expected="#[404]"
+				message="Invalid status code" />
+		</munit:validation>
+	</munit:test>
+	<munit:test name="api-kit-method-not-allowed-test"
+		doc:id="34ddc47f-5205-44d6-810a-57a46b80555b"
+		expectedErrorType="HTTP:METHOD_NOT_ALLOWED">
+
+		<munit:enable-flow-sources>
+
+			<munit:enable-flow-source
+				value="covid-papi-main" />
+			<munit:enable-flow-source
+				value="post:\cases:application\json:covid-papi-config" />
+		</munit:enable-flow-sources>
+		<munit:execution>
+			<http:request method="PATCH" doc:name="Patch"
+				doc:id="83345c83-935a-494b-a365-233bc9a937d1"
+				config-ref="HTTP_Covid_Papi_Request_configuration" path="/cases"
+				responseTimeout="120000">
+				<http:body><![CDATA[#[%dw 2.0
+output application/json
+---
+readUrl('classpath://test-data/inputs/create.json')]]]></http:body>
+				<http:headers><![CDATA[#[readUrl('classpath://test-data/inputs/headers.json')]]]></http:headers>
+			</http:request>
+		</munit:execution>
+		<munit:validation>
+			<munit-tools:assert-equals
+				doc:name="Assert Equals"
+				doc:id="f01bc27f-118a-41ab-8a2e-5334e6e49ac3"
+				actual="#[vars.httpStatus]" expected="#[405]"
+				message="Invalid status code" />
+		</munit:validation>
+	</munit:test>
+	<munit:test name="api-kit-not-acceptable-test"
+		doc:id="00f6eab7-3e54-4b33-bdee-6407ffca98a0"
+		expectedErrorType="HTTP:NOT_ACCEPTABLE">
+
+		<munit:enable-flow-sources>
+
+
+			<munit:enable-flow-source
+				value="covid-papi-main" />
+			<munit:enable-flow-source
+				value="post:\cases:application\json:covid-papi-config" />
+		</munit:enable-flow-sources>
+		<munit:behavior>
+			<munit-tools:mock-when
+				doc:name="api-kit-router"
+				doc:id="669ba4b7-d68e-4dec-a35c-cdc47d95715e"
+				processor="apikit:router">
+				<munit-tools:with-attributes>
+					<munit-tools:with-attribute
+						whereValue="covid-papi-config" attributeName="config-ref" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return>
+					<munit-tools:error typeId="APIKIT:NOT_ACCEPTABLE" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution>
+			<http:request method="POST" doc:name="Create"
+				doc:id="98229031-a10f-4944-a17b-b38833f14728"
+				config-ref="HTTP_Covid_Papi_Request_configuration" path="/cases"
+				responseTimeout="120000">
+				<http:body><![CDATA[#[%dw 2.0
+output application/json
+---
+readUrl('classpath://test-data/inputs/create.json')]]]></http:body>
+				<http:headers><![CDATA[#[readUrl('classpath://test-data/inputs/headers.json')]]]></http:headers>
+			</http:request>
+		</munit:execution>
+		<munit:validation>
+			<munit-tools:assert-equals
+				doc:name="Assert Equals"
+				doc:id="e5e7d4fb-7fc0-4ebf-b0c9-50e21173498c"
+				actual="#[vars.httpStatus]" expected="#[406]"
+				message="Invalid status code" />
+		</munit:validation>
+	</munit:test>
+	<munit:test name="api-kit-unsupported-media-type-test"
+		doc:id="61029955-b32a-4434-9d63-91426a21e496"
+		expectedErrorType="HTTP:UNSUPPORTED_MEDIA_TYPE">
+
+		<munit:enable-flow-sources>
+
+			<munit:enable-flow-source
+				value="covid-papi-main" />
+			<munit:enable-flow-source
+				value="post:\cases:application\json:covid-papi-config" />
+		</munit:enable-flow-sources>
+		<munit:execution>
+			<http:request method="POST" doc:name="Create"
+				doc:id="1143216d-c25d-4658-8a68-d9579ff9d66c"
+				config-ref="HTTP_Covid_Papi_Request_configuration" path="/cases"
+				responseTimeout="120000">
+				<http:body><![CDATA[#[%dw 2.0
+output application/java
+---
+readUrl('classpath://test-data/inputs/create.json')]]]></http:body>
+				<http:headers><![CDATA[#[readUrl('classpath://test-data/inputs/headers.json')]]]></http:headers>
+			</http:request>
+		</munit:execution>
+		<munit:validation>
+			<munit-tools:assert-equals
+				doc:name="Assert Equals"
+				doc:id="fdd1678d-3d29-40f9-a038-72d45e770937"
+				actual="#[vars.httpStatus]" expected="#[415]"
+				message="Invalid status code" />
+		</munit:validation>
+	</munit:test>
+	<munit:test name="api-kit-not-implemented-test"
+		doc:id="a1e1a7ce-2509-4043-8b3f-6b181e2abf38" expectedErrorType="ANY">
+		<munit:enable-flow-sources>
+			<munit:enable-flow-source
+				value="covid-papi-main" />
+			<munit:enable-flow-source
+				value="post:\cases:application\json:covid-papi-config" />
+		</munit:enable-flow-sources>
+		<munit:behavior>
+			<munit-tools:mock-when
+				doc:name="api-kit-router"
+				doc:id="c0ad288a-2706-417f-8ea3-53c3ac70ddd2"
+				processor="apikit:router">
+				<munit-tools:with-attributes>
+					<munit-tools:with-attribute
+						whereValue="covid-papi-config" attributeName="config-ref" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return>
+					<munit-tools:error
+						typeId="APIKIT:NOT_IMPLEMENTED" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution>
+			<http:request method="POST" doc:name="Create"
+				doc:id="70cc6e17-7d88-44b2-aa5f-3544a5edfa52"
+				config-ref="HTTP_Covid_Papi_Request_configuration" path="/cases"
+				responseTimeout="120000">
+				<http:body><![CDATA[#[%dw 2.0
+output application/json
+---
+readUrl('classpath://test-data/inputs/create.json')]]]></http:body>
+				<http:headers><![CDATA[#[readUrl('classpath://test-data/inputs/headers.json')]]]></http:headers>
+			</http:request>
+		</munit:execution>
+		<munit:validation>
+			<munit-tools:assert-equals
+				doc:name="Assert Equals"
+				doc:id="c8ae391d-e58f-44cd-afd7-6871b8ab80a5"
+				actual="#[vars.httpStatus]" expected="#[501]"
+				message="Invalid status code" />
+		</munit:validation>
+	</munit:test>
+
+
+</mule>
