@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule
+	xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd">
+
+	<flow name="create-subflow"
+		doc:id="8c09ea90-d931-422c-9c4a-375ff9392c0f">
+		<logger level="INFO" doc:name="Start Log"
+			doc:id="028825bf-18ca-4d0b-b29b-764f504e7403"
+			message="correlationId: #[vars.correlationId], message: started create subflow" />
+		<salesforce:create
+			doc:id="79c6ebb1-2a57-4a24-99b9-ccfc2f1c1583"
+			config-ref="Salesforce_Config" type="CovidMaster__c">
+			<salesforce:records ><![CDATA[#[[payload]]]]></salesforce:records>
+		</salesforce:create>
+		<logger level="INFO" doc:name="End Log"
+			doc:id="14eb98d6-b4fc-4a7a-a903-754fb631168d"
+			message="correlationId: #[vars.correlationId], message: completed create subflow" />
+	</flow>
+	<flow name="update-subflow"
+		doc:id="65854c35-8425-471a-9783-5d5abc15f2df">
+		<logger level="INFO" doc:name="Start Log"
+			doc:id="1e4192f5-0cd8-4194-8606-08e05058f22b"
+			message="correlationId: #[vars.correlationId], message: started update subflow" />
+		<salesforce:update type="CovidMaster__c"
+			doc:name="Update" doc:id="e921a714-8dc0-4755-88e5-dcc329ee166a"
+			config-ref="Salesforce_Config">
+			<salesforce:records><![CDATA[#[[payload]]]]></salesforce:records>
+		</salesforce:update>
+		<logger level="INFO" doc:name="End Log"
+			doc:id="3400bb09-36e2-42cd-a587-d21a684a2389"
+			message="correlationId: #[vars.correlationId], message: completed update subflow" />
+	</flow>
+	<flow name="get-reports-subflow"
+		doc:id="a84ad163-0c1e-44ee-82aa-638bbd315ea2">
+		<logger level="INFO" doc:name="Start Log"
+			doc:id="8a86f81f-79a6-4c32-ba90-07f000c518d2"
+			message="correlationId: #[vars.correlationId], message: started get reports subflow" />
+		<salesforce:query doc:name="Query All Or Statewise"
+			doc:id="2090ab2b-425c-4c8c-a5fe-bac66f2a5bd1"
+			config-ref="Salesforce_Config">
+			<salesforce:salesforce-query><![CDATA[#[vars.dynamicQuery]]]></salesforce:salesforce-query>
+			<salesforce:parameters><![CDATA[#[{
+	State__c: vars.state
+}]]]></salesforce:parameters>
+		</salesforce:query>
+		<logger level="INFO" doc:name="End Log"
+			doc:id="7de858c6-b592-4dd1-800b-ec1d7200449c"
+			message="correlationId: #[vars.correlationId], message: completed get reports subflow" />
+	</flow>
+	<flow name="get-by-Id-subflow"
+		doc:id="df317d42-0c7c-4934-bed9-4aaf4c3acf35">
+		<logger level="INFO" doc:name="Start Log"
+			doc:id="d26baf28-9d1e-4a44-96fb-0f6b9f3fc4df"
+			message="correlationId: #[vars.correlationId], message: started get by Id subflow" />
+		<salesforce:query doc:name="Query By Id"
+			doc:id="0b4dee99-3cc2-4989-b751-bad75c3b4b0a"
+			config-ref="Salesforce_Config">
+			<salesforce:salesforce-query><![CDATA[SELECT Id, Source__c, CaseType__c, FirstName__c, LastName__c, Phone__c, Email__c, DateOfBirth__c, AadhaarId__c, NationalIdType__c, StreetAddress__c, City__c, State__c, Pincode__c, Country__c, FirstDoseDate__c, SecondDoseDate__c, Dose__c, CreateDate__c, UpdateDate__c FROM CovidMaster__c WHERE Id = ':Id']]></salesforce:salesforce-query>
+			<salesforce:parameters><![CDATA[#[{
+	Id: vars.Id
+}]]]></salesforce:parameters>
+		</salesforce:query>
+		<logger level="INFO" doc:name="End Log"
+			doc:id="f95161f1-c7d0-4efe-b8e9-b0459a7bf333"
+			message="correlationId: #[vars.correlationId], message: completed  get by Id subflow" />
+	</flow>
+</mule>

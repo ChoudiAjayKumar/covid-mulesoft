@@ -1,0 +1,7 @@
+{
+    "code": "400",
+    "message": "Bad request",
+    "description": "Record ID: id value of incorrect type: a04NS000004b0WbYAM",
+    "dateTime": "2024-12-30T18:58:51.915+05:30",
+    "correlationId": "fffa0100-b855-11ef-a66c-28d0437f1753"
+}

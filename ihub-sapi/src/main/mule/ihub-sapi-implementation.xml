@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="create-covid-case" doc:id="8708fd76-716e-43c7-91fa-db03e5d5f28f" >
+		<logger level="INFO" doc:name="Start Log" doc:id="0093d192-5b64-4369-a2ed-adf8e5fc8f5e" message="correlationId: #[vars.correlationId], message: started create covid case flow"/>
+		<ee:transform doc:name="Create Payload" doc:id="1dfe3f43-6341-45f0-888d-27a296566c91" >
+			<ee:message >
+				<ee:set-payload resource="dataweave/create-request.dwl" />
+			</ee:message>
+		</ee:transform>
+		<flow-ref doc:name="create-subflow" doc:id="394aee06-c972-47a7-a282-418ea1978cd1" name="create-subflow"/>
+		<choice doc:name="Create Successful ?" doc:id="5a2d37a8-2338-4044-88cf-3cbc50df74af" >
+			<when expression="#[payload.successful]">
+				<ee:transform doc:name="Success Response,     Var httpStatus" doc:id="6e708153-eee8-4f35-a93d-619f02770866">
+			<ee:message>
+						<ee:set-payload resource="dataweave/create-update-response.dwl" />
+			</ee:message>
+			<ee:variables>
+				<ee:set-variable variableName="httpStatus "><![CDATA[201]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+			</when>
+			<otherwise >
+				<raise-error doc:name="CUSTOM:BAD_REQUEST" doc:id="1a37e183-73ea-4194-bcff-dab272d9335e" type="CUSTOM:BAD_REQUEST" description="#[payload.items[0].message]"/>
+			</otherwise>
+		</choice>
+		<logger level="INFO" doc:name="End Log" doc:id="d2ff1620-1b8a-4492-a29a-a70a40836984" message="correlationId: #[vars.correlationId], message: completed create covid case flow" />
+	</flow>
+	<flow name="update-covid-case" doc:id="0eb28ddd-3cb4-47ee-b22e-d35e722a61d3" >
+		<logger level="INFO" doc:name="Start Log" doc:id="bb864181-024d-46f3-b672-ab649da3432a" message="correlationId: #[vars.correlationId], message: started update flow" />
+		<ee:transform doc:name="Update Payload" doc:id="d636bc95-4124-4e10-95a8-49595e6b49a9" >
+			<ee:message >
+				<ee:set-payload resource="dataweave/update-request.dwl" />
+			</ee:message>
+		</ee:transform>
+		<flow-ref doc:name="update-subflow" doc:id="3fed6cf6-a17d-4ee2-87e9-57a9cadfcff1" name="update-subflow" />
+		<choice doc:name="Update Successful ?" doc:id="abb132d9-ec3d-4880-9a05-d08f135130d2" >
+			<when expression="#[payload.successful]" >
+				<ee:transform doc:name="Success Response" doc:id="f7b8477b-61a8-4aac-bf34-439b8cc8acb5" >
+					<ee:message >
+						<ee:set-payload resource="dataweave/create-update-response.dwl" />
+					</ee:message>
+					<ee:variables >
+					</ee:variables>
+				</ee:transform>
+			</when>
+			<otherwise >
+				<raise-error doc:name="CUSTOM:BAD_REQUEST" doc:id="bb11768a-4915-42fb-9705-e96a4ed2e82f" type="CUSTOM:BAD_REQUEST" description="#[payload.items[0].message]" />
+			</otherwise>
+		</choice>
+		<logger level="INFO" doc:name="End Log" doc:id="8009e6dc-32ef-4d7e-ae35-21bc9e8c58e7" message="correlationId: #[vars.correlationId], message: completed update flow" />
+	</flow>
+	<flow name="get-covid-reports" doc:id="1fb7c9a3-c1fd-4e4a-958d-1ab3657c5e9d" >
+		<set-variable value="#[attributes.queryParams.state]" doc:name="state" doc:id="f093e3d0-b313-4bbe-b9e1-6d464042963d" variableName="state"/>
+		<logger level="INFO" doc:name="Start Log" doc:id="9d7742f7-ef96-4ff2-878d-0626362c8eb7" message="correlationId: #[vars.correlationId], message: started get covid reports flow" />
+		<set-variable value="#[%dw 2.0&#10;---&#10;if(vars.state != null)&#10;&quot;SELECT State__c, CaseType__c, Dose__c FROM CovidMaster__c WHERE State__c = ':State__c'&quot;&#10;else&#10;&quot;SELECT State__c, CaseType__c, Dose__c FROM CovidMaster__c&quot;]" doc:name="dynamicQuery" doc:id="bb518760-a9ab-4f74-b782-419248d59874" variableName="dynamicQuery"/>
+		<flow-ref doc:name="get-reports-subflow" doc:id="eb26355d-f426-4642-b3dd-b5ec4a809056" name="get-reports-subflow" />
+		<ee:transform doc:name="Success Response" doc:id="d967ba7e-666e-4a5f-b52f-8c13df43e360" >
+			<ee:message >
+				<ee:set-payload resource="dataweave/get-covid-reports-response.dwl" />
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="End Log" doc:id="e9f62fca-01f6-42a8-803d-208c438a798a" message="correlationId: #[vars.correlationId], message: completed get covid reports  flow" />
+	</flow>
+	<flow name="get-covid-case-by-Id" doc:id="0f7aa8ab-f78e-4257-a393-12f1b7a5fbb6" >
+		<set-variable value="#[attributes.uriParams.Id]" doc:name="id" doc:id="8d06066e-73fd-4138-98b6-98c5fee460a9" variableName="id" />
+		<logger level="INFO" doc:name="Start Log" doc:id="f68e378f-8ecf-4538-b246-3ce70c1569b4" message="correlationId: #[vars.correlationId], message: started get covid case by Id flow" />
+		<flow-ref doc:name="get-by-Id-subflow" doc:id="e5f71ea4-bab1-402c-8830-417f19cce6b0" name="get-by-Id-subflow" />
+		<ee:transform doc:name="Success Response" doc:id="afc6a479-cca2-4121-a713-fc9c2cd038d2" >
+			<ee:message >
+				<ee:set-payload resource="dataweave/get-covid-case-by-Id-response.dwl" />
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="End Log" doc:id="6817d8f6-de11-4f89-ab9f-1162ad1e042f" message="correlationId: #[vars.correlationId], message: completed get covid case by Id flow" />
+	</flow>
+</mule>

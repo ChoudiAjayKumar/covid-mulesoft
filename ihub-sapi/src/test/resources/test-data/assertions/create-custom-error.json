@@ -1,0 +1,7 @@
+{
+    "code": "400",
+    "message": "Bad request",
+    "description": "duplicate value found: AadhaarId__c duplicates value on record with id: a04NS000004b0WbYAI",
+    "dateTime": "2024-12-30T18:33:28.787+05:30",
+    "correlationId": "fffa0100-b855-11ef-a66c-28d0437f1753"
+}

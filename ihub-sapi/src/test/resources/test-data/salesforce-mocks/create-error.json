@@ -1,0 +1,29 @@
+{
+    "id": null,
+    "items": [
+        {
+            "exception": {
+                "localizedMessage": "duplicate value found: AadhaarId__c duplicates value on record with id: a04NS000004b0WbYAI DUPLICATE_VALUE",
+                "cause": null,
+                "message": "duplicate value found: AadhaarId__c duplicates value on record with id: a04NS000004b0WbYAI DUPLICATE_VALUE"
+            },
+            "message": "duplicate value found: AadhaarId__c duplicates value on record with id: a04NS000004b0WbYAI",
+            "payload": {
+                "success": false,
+                "id": null,
+                "errors": [
+                    {
+                        "duplicateResult": null,
+                        "message": "duplicate value found: AadhaarId__c duplicates value on record with id: a04NS000004b0WbYAI",
+                        "fields": [],
+                        "statusCode": "DUPLICATE_VALUE"
+                    }
+                ]
+            },
+            "id": null,
+            "statusCode": "DUPLICATE_VALUE",
+            "successful": false
+        }
+    ],
+    "successful": false
+}

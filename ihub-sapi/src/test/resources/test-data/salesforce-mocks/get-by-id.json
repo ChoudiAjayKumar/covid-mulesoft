@@ -1,0 +1,25 @@
+[
+  {
+    "Country__c": "INDIA",
+    "FirstDoseDate__c": "2021-09-13",
+    "SecondDoseDate__c": "2021-10-16",
+    "DateOfBirth__c": "1989-04-26",
+    "Pincode__c": "500034",
+    "type": "CovidMaster__c",
+    "AadhaarId__c": "397788000099",
+    "UpdateDate__c": "2024-12-30",
+    "City__c": "Hyderabad",
+    "Dose__c": "2",
+    "CreateDate__c": "2024-12-30",
+    "StreetAddress__c": "123, Banjara Hills Road",
+    "NationalIdType__c": "AADHAAR",
+    "LastName__c": "Verma",
+    "Phone__c": "9898989800",
+    "Id": "a04NS000004b0WbYAI",
+    "CaseType__c": "DEATH",
+    "Source__c": "CARE hospital",
+    "FirstName__c": "Arjun",
+    "State__c": "Telangana",
+    "Email__c": "arjun@gmail.com"
+  }
+]

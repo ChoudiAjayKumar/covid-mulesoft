@@ -1,0 +1,9 @@
+[
+  {
+    "Dose__c": "1",
+    "Id": null,
+    "CaseType__c": "RECOVERED",
+    "type": "CovidMaster__c",
+    "State__c": "Karnataka"
+  }
+]

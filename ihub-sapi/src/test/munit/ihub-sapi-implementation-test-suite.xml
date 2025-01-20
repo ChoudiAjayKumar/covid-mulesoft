@@ -1,0 +1,593 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:munit="http://www.mulesoft.org/schema/mule/munit"
+	xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xsi:schemaLocation="
+		http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+		http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+		http://www.mulesoft.org/schema/mule/munit-tools  http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
+	<http:request-config
+		name="HTTP_Ihub-Sapi_Request_configuration"
+		doc:name="HTTP Request configuration"
+		doc:id="08417697-c022-48d8-82c7-8679130654a2" basePath="/api">
+		<http:request-connection
+			host="${secure::http.host}" port="${secure::http.port}" />
+	</http:request-config>
+	<munit:config
+		name="ihub-sapi-implementation-test-suite.xml" />
+	<munit:test doc:id="d0cd3c57-3531-414e-9d08-382594f65ce8"
+		description="Test" name="create-test">
+		<munit:enable-flow-sources>
+			<munit:enable-flow-source
+				value="ihub-sapi-main" />
+			<munit:enable-flow-source
+				value="post:\cases:application\json:ihub-sapi-config" />
+		</munit:enable-flow-sources>
+		<munit:behavior>
+			<munit-tools:mock-when doc:name="Create"
+				doc:id="cdfca8f4-4dad-49be-b789-15885a491073"
+				processor="salesforce:create">
+				<munit-tools:with-attributes>
+					<munit-tools:with-attribute
+						whereValue="79c6ebb1-2a57-4a24-99b9-ccfc2f1c1583"
+						attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value="#[%dw 2.0&#10;output application/java&#10;---&#10;readUrl('classpath://test-data/salesforce-mocks/upsert-success.json')]" mediaType="application/java" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution>
+			<http:request method="POST" doc:name="Create"
+				doc:id="701ea108-4845-4ac3-9ba8-aac1085dbd07"
+				config-ref="HTTP_Ihub-Sapi_Request_configuration" path="/cases">
+				<http:body><![CDATA[#[%dw 2.0
+output application/json
+---
+readUrl('classpath://test-data/inputs/create.json')]]]></http:body>
+				<http:headers><![CDATA[#[readUrl('classpath://test-data/inputs/headers.json')]]]></http:headers>
+			</http:request>
+		</munit:execution>
+		<munit:validation>
+			<munit-tools:assert-equals
+				doc:name="Assert Equals"
+				doc:id="db3716c7-57b7-4d8f-9db0-f2bcbdd97a0c"
+				expected="#[readUrl('classpath://test-data/assertions/upsert.json')]"
+				actual="#[payload]" message="Invalid response" />
+		</munit:validation>
+	</munit:test>
+	<munit:test name="create-custom-error-test"
+		doc:id="5f369ec5-0394-4a15-8c64-cce2e4941e02" description="Test"
+		expectedErrorType="HTTP:BAD_REQUEST">
+		<munit:enable-flow-sources>
+			<munit:enable-flow-source
+				value="ihub-sapi-main" />
+			<munit:enable-flow-source
+				value="post:\cases:application\json:ihub-sapi-config" />
+		</munit:enable-flow-sources>
+		<munit:behavior>
+			<munit-tools:mock-when doc:name="Create"
+				doc:id="b7669d3a-d428-43f8-a4c1-006a2b2f2983"
+				processor="salesforce:create">
+				<munit-tools:with-attributes>
+					<munit-tools:with-attribute
+						whereValue="79c6ebb1-2a57-4a24-99b9-ccfc2f1c1583"
+						attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value="#[%dw 2.0&#10;output application/java&#10;---&#10;readUrl('classpath://test-data/salesforce-mocks/create-error.json')]" mediaType="application/java" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution>
+			<http:request method="POST" doc:name="Create"
+				doc:id="be826bab-acf1-4d69-8e42-b9d7c54e6ad3"
+				config-ref="HTTP_Ihub-Sapi_Request_configuration" path="/cases"
+				responseTimeout="120000">
+				<http:body><![CDATA[#[%dw 2.0
+output application/json
+---
+readUrl('classpath://test-data/inputs/create.json')]]]></http:body>
+				<http:headers><![CDATA[#[readUrl('classpath://test-data/inputs/headers.json')]]]></http:headers>
+			</http:request>
+		</munit:execution>
+		<munit:validation>
+			<munit-tools:assert-equals
+				doc:name="Assert Equals"
+				doc:id="e7dcd8b3-b441-4f11-aaf8-f864ff37bee0" actual="#[payload]"
+				expected="#[readUrl('classpath://test-data/assertions/create-custom-error.json')]"
+				message="Invalid response" />
+		</munit:validation>
+	</munit:test>
+	<munit:test name="update-test"
+		doc:id="d78efaa5-b699-4c2c-b2ec-143e410cb407" description="Test">
+		<munit:enable-flow-sources>
+			<munit:enable-flow-source
+				value="ihub-sapi-main" />
+			<munit:enable-flow-source
+				value="put:\cases:application\json:ihub-sapi-config" />
+		</munit:enable-flow-sources>
+		<munit:behavior>
+			<munit-tools:mock-when doc:name="Update"
+				doc:id="1885cb13-d17d-42eb-8c28-3ff0ecbeee83"
+				processor="salesforce:update">
+				<munit-tools:with-attributes>
+					<munit-tools:with-attribute
+						whereValue="e921a714-8dc0-4755-88e5-dcc329ee166a"
+						attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value="#[%dw 2.0&#10;output application/java&#10;---&#10;readUrl('classpath://test-data/salesforce-mocks/upsert-success.json')]" mediaType="application/java" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution>
+			<http:request method="PUT" doc:name="Update"
+				doc:id="561ff1f6-a33e-44d0-bc74-3c2e3404e8d4"
+				config-ref="HTTP_Ihub-Sapi_Request_configuration" path="/cases">
+				<http:body><![CDATA[#[%dw 2.0
+output application/json
+---
+readUrl('classpath://test-data/inputs/update.json')]]]></http:body>
+				<http:headers><![CDATA[#[readUrl('classpath://test-data/inputs/headers.json')]]]></http:headers>
+			</http:request>
+		</munit:execution>
+		<munit:validation>
+			<munit-tools:assert-equals
+				doc:name="Assert Equals"
+				doc:id="37596c58-b713-4f58-9d10-2ee7b9dcf99b" actual="#[payload]"
+				expected="#[readUrl('classpath://test-data/assertions/upsert.json')]"
+				message="Invalid response" />
+		</munit:validation>
+	</munit:test>
+	<munit:test name="update-custom-error-test"
+		doc:id="494b3879-7722-40de-99cf-dd98db5d973e" description="Test"
+		expectedErrorType="HTTP:BAD_REQUEST">
+
+
+		<munit:enable-flow-sources>
+			<munit:enable-flow-source
+				value="ihub-sapi-main" />
+			<munit:enable-flow-source
+				value="put:\cases:application\json:ihub-sapi-config" />
+		</munit:enable-flow-sources>
+		<munit:behavior>
+			<munit-tools:mock-when doc:name="Update"
+				doc:id="7728a408-28c3-410c-90b8-4813040a2306"
+				processor="salesforce:update">
+				<munit-tools:with-attributes>
+					<munit-tools:with-attribute
+						whereValue="e921a714-8dc0-4755-88e5-dcc329ee166a"
+						attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value="#[%dw 2.0&#10;output application/java&#10;---&#10;readUrl('classpath://test-data/salesforce-mocks/update-error.json')]" mediaType="application/java" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution>
+			<http:request method="PUT" doc:name="Update"
+				doc:id="24beab44-bb1f-444d-96a5-4b1a489cb3a0"
+				config-ref="HTTP_Ihub-Sapi_Request_configuration" path="/cases"
+				responseTimeout="120000">
+				<http:body><![CDATA[#[%dw 2.0
+output application/json
+---
+readUrl('classpath://test-data/inputs/update.json')]]]></http:body>
+				<http:headers><![CDATA[#[readUrl('classpath://test-data/inputs/headers.json')]]]></http:headers>
+			</http:request>
+		</munit:execution>
+		<munit:validation>
+			<munit-tools:assert-equals
+				doc:name="Assert Equals"
+				doc:id="8d897a7b-1ec1-4aa2-89f3-9b9985bfe664" actual="#[payload]"
+				expected="#[readUrl('classpath://test-data/update-custom-error.json')]"
+				message="Invalid response" />
+		</munit:validation>
+	</munit:test>
+	<munit:test name="get-reports-test"
+		doc:id="49daf64a-4f41-4012-aff4-431a32a86bd6">
+		<munit:enable-flow-sources>
+			<munit:enable-flow-source
+				value="ihub-sapi-main" />
+			<munit:enable-flow-source
+				value="get:\cases:ihub-sapi-config" />
+		</munit:enable-flow-sources>
+		<munit:behavior>
+			<munit-tools:mock-when
+				doc:name="Query All Or Statewise"
+				doc:id="52e462e6-a1de-41ac-9f75-73fb319ec5e3"
+				processor="salesforce:query">
+				<munit-tools:with-attributes>
+					<munit-tools:with-attribute
+						whereValue="2090ab2b-425c-4c8c-a5fe-bac66f2a5bd1"
+						attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value="#[%dw 2.0&#10;output application/java&#10;---&#10;readUrl('classpath://test-data/salesforce-mocks/get-reports.json')]" mediaType="application/java" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution>
+			<http:request method="GET" doc:name="Get Reports"
+				doc:id="fe479a51-9ea0-4e9e-adff-4ca6e60a7da9"
+				config-ref="HTTP_Ihub-Sapi_Request_configuration" path="/cases">
+				<http:headers><![CDATA[#[readUrl('classpath://test-data/inputs/headers.json')]]]></http:headers>
+				<http:query-params><![CDATA[#[readUrl('classpath://test-data/inputs/state.json')]]]></http:query-params>
+			</http:request>
+		</munit:execution>
+		<munit:validation>
+			<munit-tools:assert-equals
+				doc:name="Assert Equals"
+				doc:id="a6169803-476f-4333-840b-d843c2e9c293" actual="#[payload]"
+				expected="#[readUrl('classpath://test-data/assertions/get-reports.json')]"
+				message="Invalid response" />
+		</munit:validation>
+	</munit:test>
+	<munit:test name="get-by-Id-test"
+		doc:id="4a9bfa9d-5bad-4c08-b7e5-31703be5b84a">
+		<munit:enable-flow-sources>
+			<munit:enable-flow-source
+				value="ihub-sapi-main" />
+			<munit:enable-flow-source
+				value="get:\cases\(Id):ihub-sapi-config" />
+		</munit:enable-flow-sources>
+		<munit:behavior>
+			<munit-tools:mock-when doc:name="Query By Id"
+				doc:id="cd5f3232-f3b1-4381-8fdd-0f7caa9c05bf"
+				processor="salesforce:query">
+				<munit-tools:with-attributes>
+					<munit-tools:with-attribute
+						whereValue="0b4dee99-3cc2-4989-b751-bad75c3b4b0a"
+						attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value="#[%dw 2.0&#10;output application/java&#10;---&#10;readUrl('classpath://test-data/salesforce-mocks/get-by-id.json')]" mediaType="application/java" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution>
+			<http:request method="GET" doc:name="Get By Id"
+				doc:id="d58be69d-73c0-4af1-a00f-7ba16d4f06c4"
+				config-ref="HTTP_Ihub-Sapi_Request_configuration" path="/cases/{Id}">
+				<http:headers><![CDATA[#[readUrl('classpath://test-data/inputs/headers.json')]]]></http:headers>
+				<http:uri-params><![CDATA[#[readUrl('classpath://test-data/inputs/Id.json')]]]></http:uri-params>
+			</http:request>
+		</munit:execution>
+		<munit:validation>
+			<munit-tools:assert-equals
+				doc:name="Assert Equals"
+				doc:id="916458bb-c7c9-4246-9713-27a2ad35c22e" actual="#[payload]"
+				expected="#[readUrl('classpath://test-data/assertions/get-by-id.json')]"
+				message="Invalid response" />
+		</munit:validation>
+	</munit:test>
+	<munit:test name="healthcheck-test"
+		doc:id="59081c0f-1158-4e4d-943e-2cc2819a4a34">
+		<munit:enable-flow-sources>
+			<munit:enable-flow-source
+				value="ihub-sapi-main" />
+			<munit:enable-flow-source
+				value="get:\healthcheck:ihub-sapi-config" />
+		</munit:enable-flow-sources>
+		<munit:execution>
+			<http:request method="GET" doc:name="Create"
+				doc:id="27e444eb-9b6b-4ce4-a93d-aec4d10a26e8"
+				config-ref="HTTP_Ihub-Sapi_Request_configuration"
+				path="/healthcheck" responseTimeout="120000">
+				<http:headers><![CDATA[#[readUrl('classpath://test-data/inputs/headers.json')]]]></http:headers>
+			</http:request>
+		</munit:execution>
+		<munit:validation>
+			<munit-tools:assert-equals
+				doc:name="Assert Equals"
+				doc:id="9cfabe0b-a975-4bd6-a0c3-90048d1fd14e" actual="#[payload]"
+				expected="#[readUrl('classpath://test-data/assertions/healthcheck.json')]"
+				message="Invalid response" />
+		</munit:validation>
+	</munit:test>
+	<munit:test name="connectivity-error-test"
+		doc:id="9cb1ef00-cbfb-41c2-9bc2-ca3a8bcfd79c" description="Test"
+		expectedErrorType="HTTP:SERVICE_UNAVAILABLE">
+		<munit:enable-flow-sources>
+			<munit:enable-flow-source
+				value="ihub-sapi-main" />
+			<munit:enable-flow-source
+				value="post:\cases:application\json:ihub-sapi-config" />
+		</munit:enable-flow-sources>
+		<munit:behavior>
+			<munit-tools:mock-when doc:name="Create"
+				doc:id="8f65f537-05f5-4d6c-9b42-857a11c9e43b"
+				processor="salesforce:create">
+				<munit-tools:with-attributes>
+					<munit-tools:with-attribute
+						whereValue="79c6ebb1-2a57-4a24-99b9-ccfc2f1c1583"
+						attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return>
+					<munit-tools:error
+						typeId="SALESFORCE:CONNECTIVITY" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution>
+			<http:request method="POST" doc:name="Create"
+				doc:id="7335b985-f295-4769-8f17-ddca6f521539"
+				config-ref="HTTP_Ihub-Sapi_Request_configuration" path="/cases"
+				responseTimeout="120000">
+				<http:body><![CDATA[#[%dw 2.0
+output application/json
+---
+readUrl('classpath://test-data/inputs/create.json')]]]></http:body>
+				<http:headers><![CDATA[#[readUrl('classpath://test-data/inputs/headers.json')]]]></http:headers>
+			</http:request>
+		</munit:execution>
+		<munit:validation>
+			<munit-tools:assert-equals
+				doc:name="Assert Equals"
+				doc:id="c72847e6-f403-4f41-92be-3ebc3c736c32"
+				actual="#[vars.httpStatus]" expected="503" message="Invalid Status" />
+		</munit:validation>
+	</munit:test>
+	<munit:test name="any-error-test"
+		doc:id="18d0ebb0-13e5-4b8a-b3d8-86b78133053c" description="Test"
+		expectedErrorType="HTTP:INTERNAL_SERVER_ERROR">
+		<munit:enable-flow-sources>
+			<munit:enable-flow-source
+				value="ihub-sapi-main" />
+			<munit:enable-flow-source
+				value="post:\cases:application\json:ihub-sapi-config" />
+		</munit:enable-flow-sources>
+		<munit:behavior>
+			<munit-tools:mock-when doc:name="Create"
+				doc:id="acd24b36-5d19-4d44-b1a7-c754dd2dfd5b"
+				processor="salesforce:create">
+				<munit-tools:with-attributes>
+					<munit-tools:with-attribute
+						whereValue="79c6ebb1-2a57-4a24-99b9-ccfc2f1c1583"
+						attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return>
+					<munit-tools:error
+						typeId="SALESFORCE:OPERATION_NOT_SUPPORTED" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution>
+			<http:request method="POST" doc:name="Create"
+				doc:id="8a9797b0-b009-4220-acae-628ac3dd9f6e"
+				config-ref="HTTP_Ihub-Sapi_Request_configuration" path="/cases"
+				responseTimeout="120000">
+				<http:body><![CDATA[#[%dw 2.0
+output application/json
+---
+readUrl('classpath://test-data/inputs/create.json')]]]></http:body>
+				<http:headers><![CDATA[#[readUrl('classpath://test-data/inputs/headers.json')]]]></http:headers>
+			</http:request>
+		</munit:execution>
+		<munit:validation>
+			<munit-tools:assert-equals
+				doc:name="Assert Equals"
+				doc:id="72ede2e2-5253-410a-a9ef-c85063537bbf"
+				actual="#[vars.httpStatus]" expected="500" message="Invalid Status" />
+		</munit:validation>
+	</munit:test>
+	<munit:test name="api-kit-bad-request-test"
+		doc:id="b8088305-f13c-41d0-a2dc-bf2c23a33d8c"
+		expectedErrorType="HTTP:BAD_REQUEST">
+		<munit:enable-flow-sources>
+			<munit:enable-flow-source
+				value="ihub-sapi-main" />
+			<munit:enable-flow-source
+				value="post:\cases:application\json:ihub-sapi-config" />
+		</munit:enable-flow-sources>
+		<munit:execution>
+			<http:request method="POST" doc:name="Create"
+				doc:id="76ad6427-1d6a-4a22-b2b5-b8862407c2c0"
+				config-ref="HTTP_Ihub-Sapi_Request_configuration" path="/cases"
+				responseTimeout="120000">
+				<http:body><![CDATA[#[%dw 2.0
+output application/json
+---
+readUrl('classpath://test-data/inputs/create.json')]]]></http:body>
+				<http:headers><![CDATA[#[readUrl('classpath://test-data/inputs/apikit-bad-request.json')]]]></http:headers>
+			</http:request>
+		</munit:execution>
+		<munit:validation>
+			<munit-tools:assert-equals
+				doc:name="Assert Equals"
+				doc:id="6ee3fa94-95c8-4a4b-bb07-7aff26835ef9"
+				actual="#[vars.httpStatus]" expected="#[400]"
+				message="Invalid status code" />
+		</munit:validation>
+	</munit:test>
+	<munit:test name="api-kit-not-found-test"
+		doc:id="28c71e8d-3acb-46dd-a124-e057801a0523"
+		expectedErrorType="HTTP:NOT_FOUND">
+
+		<munit:enable-flow-sources>
+
+
+			<munit:enable-flow-source
+				value="ihub-sapi-main" />
+			<munit:enable-flow-source
+				value="post:\cases:application\json:ihub-sapi-config" />
+		</munit:enable-flow-sources>
+		<munit:execution>
+			<http:request method="POST" doc:name="Create"
+				doc:id="ed940310-1705-41b4-8205-e2b07f15509b"
+				config-ref="HTTP_Ihub-Sapi_Request_configuration" path="/cases123"
+				responseTimeout="120000">
+				<http:body><![CDATA[#[%dw 2.0
+output application/json
+---
+readUrl('classpath://test-data/inputs/create.json')]]]></http:body>
+				<http:headers><![CDATA[#[readUrl('classpath://test-data/inputs/headers.json')]]]></http:headers>
+			</http:request>
+		</munit:execution>
+		<munit:validation>
+			<munit-tools:assert-equals
+				doc:name="Assert Equals"
+				doc:id="11999068-1428-4170-a27f-76dcf0e79d60"
+				actual="#[vars.httpStatus]" expected="#[404]"
+				message="Invalid status code" />
+		</munit:validation>
+	</munit:test>
+	<munit:test name="api-kit-method-not-allowed-test"
+		doc:id="8a91de4a-29a6-4536-9bc9-11285dec8fbd"
+		expectedErrorType="HTTP:METHOD_NOT_ALLOWED">
+
+		<munit:enable-flow-sources>
+
+
+			<munit:enable-flow-source
+				value="ihub-sapi-main" />
+			<munit:enable-flow-source
+				value="post:\cases:application\json:ihub-sapi-config" />
+		</munit:enable-flow-sources>
+		<munit:execution>
+			<http:request method="PATCH" doc:name="Patch"
+				doc:id="6d7312ca-d53d-42ae-acf4-45a9706d4bc4"
+				config-ref="HTTP_Ihub-Sapi_Request_configuration" path="/cases"
+				responseTimeout="120000">
+				<http:body><![CDATA[#[%dw 2.0
+output application/json
+---
+readUrl('classpath://test-data/inputs/create.json')]]]></http:body>
+				<http:headers><![CDATA[#[readUrl('classpath://test-data/inputs/headers.json')]]]></http:headers>
+			</http:request>
+		</munit:execution>
+		<munit:validation>
+			<munit-tools:assert-equals
+				doc:name="Assert Equals"
+				doc:id="9802d1bf-ff93-4599-8784-2c597b934018"
+				actual="#[vars.httpStatus]" expected="#[405]"
+				message="Invalid status code" />
+		</munit:validation>
+	</munit:test>
+	<munit:test name="api-kit-not-acceptable-test"
+		doc:id="95fed474-cd0e-45a3-b3ff-7387c7bbd597"
+		expectedErrorType="HTTP:NOT_ACCEPTABLE">
+		<munit:enable-flow-sources>
+			<munit:enable-flow-source
+				value="ihub-sapi-main" />
+			<munit:enable-flow-source
+				value="post:\cases:application\json:ihub-sapi-config" />
+		</munit:enable-flow-sources>
+		<munit:behavior>
+			<munit-tools:mock-when
+				doc:name="api-kit-router"
+				doc:id="fe464b47-70f9-4cbf-abef-024e9d471baa"
+				processor="apikit:router">
+				<munit-tools:with-attributes>
+					<munit-tools:with-attribute
+						whereValue="ihub-sapi-config" attributeName="config-ref" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return>
+					<munit-tools:error typeId="APIKIT:NOT_ACCEPTABLE" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution>
+			<http:request method="POST" doc:name="Create"
+				doc:id="aae666e3-23a3-4669-93f2-8969698d3766"
+				config-ref="HTTP_Ihub-Sapi_Request_configuration" path="/cases"
+				responseTimeout="120000">
+				<http:body><![CDATA[#[%dw 2.0
+output application/json
+---
+readUrl('classpath://test-data/inputs/create.json')]]]></http:body>
+				<http:headers><![CDATA[#[readUrl('classpath://test-data/inputs/headers.json')]]]></http:headers>
+			</http:request>
+		</munit:execution>
+		<munit:validation>
+			<munit-tools:assert-equals
+				doc:name="Assert Equals"
+				doc:id="26b9bb77-aa56-4e41-bb65-7336b7b5d612"
+				actual="#[vars.httpStatus]" expected="#[406]"
+				message="Invalid status code" />
+		</munit:validation>
+	</munit:test>
+	<munit:test name="api-kit-unsupported-media-type-test"
+		doc:id="7122804f-421b-4bec-a3b3-2fdd3121592a"
+		expectedErrorType="HTTP:UNSUPPORTED_MEDIA_TYPE">
+
+		<munit:enable-flow-sources>
+
+
+			<munit:enable-flow-source
+				value="ihub-sapi-main" />
+			<munit:enable-flow-source
+				value="post:\cases:application\json:ihub-sapi-config" />
+		</munit:enable-flow-sources>
+		<munit:execution>
+			<http:request method="POST" doc:name="Create"
+				doc:id="07211d3f-564e-42bc-ac87-357021f0c63e"
+				config-ref="HTTP_Ihub-Sapi_Request_configuration" path="/cases"
+				responseTimeout="120000">
+				<http:body><![CDATA[#[%dw 2.0
+output application/java
+---
+readUrl('classpath://test-data/inputs/create.json')]]]></http:body>
+				<http:headers><![CDATA[#[readUrl('classpath://test-data/inputs/headers.json')]]]></http:headers>
+			</http:request>
+		</munit:execution>
+		<munit:validation>
+			<munit-tools:assert-equals
+				doc:name="Assert Equals"
+				doc:id="a0256f7e-2d24-45ca-bef9-dd15ac20170a"
+				actual="#[vars.httpStatus]" expected="#[415]"
+				message="Invalid status code" />
+		</munit:validation>
+	</munit:test>
+
+	<munit:test name="api-kit-not-implemented-test"
+		doc:id="1c0c481f-caea-4f13-bb0a-519edac2c09b" expectedErrorType="ANY">
+		<munit:enable-flow-sources>
+			<munit:enable-flow-source
+				value="ihub-sapi-main" />
+			<munit:enable-flow-source
+				value="post:\cases:application\json:ihub-sapi-config" />
+		</munit:enable-flow-sources>
+		<munit:behavior>
+			<munit-tools:mock-when
+				doc:name="api-kit-router"
+				doc:id="fb592638-6086-4d10-8727-b81a05f73a87"
+				processor="apikit:router">
+				<munit-tools:with-attributes>
+					<munit-tools:with-attribute
+						whereValue="ihub-sapi-config" attributeName="config-ref" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return>
+					<munit-tools:error
+						typeId="APIKIT:NOT_IMPLEMENTED" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution>
+			<http:request method="POST" doc:name="Create"
+				doc:id="4e28acbb-9888-458a-b6d8-98436374f49f"
+				config-ref="HTTP_Ihub-Sapi_Request_configuration" path="/cases"
+				responseTimeout="120000">
+				<http:body><![CDATA[#[%dw 2.0
+output application/json
+---
+readUrl('classpath://test-data/inputs/create.json')]]]></http:body>
+				<http:headers><![CDATA[#[readUrl('classpath://test-data/inputs/headers.json')]]]></http:headers>
+			</http:request>
+		</munit:execution>
+		<munit:validation>
+			<munit-tools:assert-equals
+				doc:name="Assert Equals"
+				doc:id="6a18e898-638f-45e8-85a8-3b9741229575"
+				actual="#[vars.httpStatus]" expected="#[501]"
+				message="Invalid status code" />
+		</munit:validation>
+	</munit:test>
+
+</mule>

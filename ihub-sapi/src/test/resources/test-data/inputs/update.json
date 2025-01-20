@@ -1,0 +1,20 @@
+{
+    "Id": "a04NS000004b0WbYAM",
+    "Source__c": "CARE hospital",
+    "CaseType__c": "DEATH",
+    "FirstName__c": "Arjun",
+    "LastName__c": "Verma",
+    "Phone__c": "9898989800",
+    "Email__c": "arjun@gmail.com",
+    "DateOfBirth__c": "1989-04-26",
+    "AadhaarId__c": "397788000099",
+    "NationalIdType__c": "AADHAAR",
+    "StreetAddress__c": "123, Banjara Hills Road",
+    "City__c": "Hyderabad",
+    "State__c": "Telangana",
+    "Pincode__c": "500034",
+    "Country__c": "INDIA",
+    "FirstDoseDate__c": "2021-09-13",
+    "SecondDoseDate__c": "2021-10-16",
+    "Dose__c": "2"
+}

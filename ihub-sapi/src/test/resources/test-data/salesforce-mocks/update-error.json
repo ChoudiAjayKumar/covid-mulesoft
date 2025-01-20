@@ -1,0 +1,31 @@
+{
+    "id": null,
+    "items": [
+        {
+            "exception": {
+                "localizedMessage": "Record ID: id value of incorrect type: a04NS000004b0WbYAM MALFORMED_ID",
+                "cause": null,
+                "message": "Record ID: id value of incorrect type: a04NS000004b0WbYAM MALFORMED_ID"
+            },
+            "message": "Record ID: id value of incorrect type: a04NS000004b0WbYAM",
+            "payload": {
+                "success": false,
+                "id": null,
+                "errors": [
+                    {
+                        "duplicateResult": null,
+                        "message": "Record ID: id value of incorrect type: a04NS000004b0WbYAM",
+                        "fields": [
+                            "Id"
+                        ],
+                        "statusCode": "MALFORMED_ID"
+                    }
+                ]
+            },
+            "id": null,
+            "statusCode": "MALFORMED_ID",
+            "successful": false
+        }
+    ],
+    "successful": false
+}

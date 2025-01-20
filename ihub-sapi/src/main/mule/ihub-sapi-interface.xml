@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd ">
+    <flow name="ihub-sapi-main">
+        <http:listener config-ref="ihub-sapi-httpListenerConfig" path="/api/*">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body>#[payload]</http:body>
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:error-response>
+        </http:listener>
+        <set-variable value="#[attributes.headers.'correlation-id' default correlationId]" doc:name="Correlation ID" doc:id="5d7907a3-64d7-49a5-849f-951ec6393c99" variableName="correlationId" />
+        <apikit:router config-ref="ihub-sapi-config" />
+        <error-handler ref="Global_Error_Handler" />
+    </flow>
+    <flow name="get:\healthcheck:ihub-sapi-config" doc:id="c9db25f7-4e9b-46a4-aeba-16889a512286">
+        <ee:transform doc:name="Health Check Response">
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+  status: "The service is alive and running"
+} as Object {encoding: "UTF-8", mediaType: "application/json"}]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+    </flow>
+    <flow name="post:\cases:application\json:ihub-sapi-config" doc:id="565cf9d3-cd31-422f-8069-261ad54267c4">
+        <flow-ref doc:name="create-covid-case" doc:id="e55891c9-35c9-4d1f-b3cf-90c60dbafc8b" name="create-covid-case" />
+    </flow>
+    <flow name="put:\cases:application\json:ihub-sapi-config" doc:id="c6697d06-25e7-47d7-9c8b-123b07b4cb99">
+        <flow-ref doc:name="update-covid-case" doc:id="60a03c0f-d815-4d58-bdbe-51732b71a903" name="update-covid-case" />
+    </flow>
+    <flow name="get:\cases:ihub-sapi-config" doc:id="bb49c9ab-cd39-4b84-ac42-8f19853e17e1">
+        <flow-ref doc:name="get-covid-reports" doc:id="855372c9-587e-4b2c-a9a0-058c7c8b5ef6" name="get-covid-reports" />
+    </flow>
+    <flow name="get:\cases\(Id):ihub-sapi-config" doc:id="06c985c6-30ea-4047-929a-dfc8a3673541">
+        <flow-ref doc:name="get-covid-case-by-Id" doc:id="233e8116-a468-47a5-8a98-df7aa50e5984" name="get-covid-case-by-Id" />
+    </flow>
+</mule>
